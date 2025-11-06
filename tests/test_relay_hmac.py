@@ -25,7 +25,6 @@ from sheratan_core.schemas import RelayStatus
 @pytest.fixture(autouse=True)
 def reset_state(monkeypatch):
     monkeypatch.setenv("SHERATAN_HMAC_SECRET", "super-secret")
-    monkeypatch.delenv("SHERATAN_IDEMPOTENCY_SQLITE_PATH", raising=False)
     _reset_hmac_state()
     yield
     _reset_hmac_state()
@@ -70,7 +69,7 @@ def test_relay_status_invalid_signature():
     assert exc.value.status_code == 401
 
 
-def test_relay_status_duplicate_returns_same_ack():
+def test_relay_status_replay_detected():
     payload = {"job_id": "job-3", "phase": "running"}
     timestamp = str(int(time.time()))
     headers = _make_headers("super-secret", payload, timestamp=timestamp, idempotency="replay-key")
@@ -78,39 +77,9 @@ def test_relay_status_duplicate_returns_same_ack():
     first = asyncio.run(_call_status(payload, headers))
     assert first.ok is True
 
-    second = asyncio.run(_call_status(payload, headers))
-    assert second.ok is True
-
-
-def test_relay_status_conflicting_payload():
-    timestamp = str(int(time.time()))
-    key = "conflict-key"
-    payload = {"job_id": "job-4", "phase": "running"}
-    headers = _make_headers("super-secret", payload, timestamp=timestamp, idempotency=key)
-    asyncio.run(_call_status(payload, headers))
-
-    conflicting_payload = {"job_id": "job-4", "phase": "done"}
-    conflicting_headers = _make_headers("super-secret", conflicting_payload, timestamp=timestamp, idempotency=key)
-
     with pytest.raises(HTTPException) as exc:
-        asyncio.run(_call_status(conflicting_payload, conflicting_headers))
-
-    assert exc.value.status_code == 409
-
-
-def test_relay_status_sqlite_backend(tmp_path, monkeypatch):
-    db_path = tmp_path / "idem.db"
-    monkeypatch.setenv("SHERATAN_IDEMPOTENCY_SQLITE_PATH", str(db_path))
-    _reset_hmac_state()
-
-    payload = {"job_id": "job-5", "phase": "running"}
-    headers = _make_headers("super-secret", payload, idempotency="sqlite-key")
-
-    first = asyncio.run(_call_status(payload, headers))
-    assert first.ok is True
-
-    second = asyncio.run(_call_status(payload, headers))
-    assert second.ok is True
+        asyncio.run(_call_status(payload, headers))
+    assert exc.value.status_code == 401
 
 
 def _build_request(payload: dict, headers: dict[str, str]) -> Request:

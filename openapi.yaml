@@ -48,25 +48,6 @@ paths:
                 $ref: '#/components/schemas/RouterModelsResponse'
   /relay/status:
     post:
-      parameters:
-        - name: Timestamp
-          in: header
-          required: true
-          schema:
-            type: string
-          description: Unix epoch seconds of the callback emission.
-        - name: X-Sheratan-Idempotency
-          in: header
-          required: true
-          schema:
-            type: string
-          description: Unique identifier preventing replay attacks and ensuring idempotent processing.
-        - name: Signature
-          in: header
-          required: true
-          schema:
-            type: string
-          description: HMAC-SHA256 signature over timestamp, idempotency, and body.
       requestBody:
         required: true
         content:
@@ -82,25 +63,6 @@ paths:
                 $ref: '#/components/schemas/AckResponse'
   /relay/final:
     post:
-      parameters:
-        - name: Timestamp
-          in: header
-          required: true
-          schema:
-            type: string
-          description: Unix epoch seconds of the callback emission.
-        - name: X-Sheratan-Idempotency
-          in: header
-          required: true
-          schema:
-            type: string
-          description: Unique identifier preventing replay attacks and ensuring idempotent processing.
-        - name: Signature
-          in: header
-          required: true
-          schema:
-            type: string
-          description: HMAC-SHA256 signature over timestamp, idempotency, and body.
       requestBody:
         required: true
         content:
