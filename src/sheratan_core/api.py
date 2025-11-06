@@ -1,11 +1,4 @@
-from __future__ import annotations
-
-import os
-import time
-from threading import Lock
-from typing import Optional
-
-from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 
 from .registry import load_router
 from .types import LLMRouter
@@ -85,111 +78,12 @@ async def router_models() -> RouterModelsResponse:
 
     return RouterModelsResponse(name=r.name(), models=models, metadata=metadata)
 
-HMAC_SECRET_ENV = "SHERATAN_HMAC_SECRET"
-SIGNATURE_HEADER = "Signature"
-TIMESTAMP_HEADER = "Timestamp"
-IDEMPOTENCY_HEADER = "Idempotency"
-TIMESTAMP_TOLERANCE_SECONDS = 300
-
-
-def _load_hmac_secret() -> str:
-    secret = os.getenv(HMAC_SECRET_ENV, "").strip()
-    if not secret:
-        raise HTTPException(status_code=500, detail="HMAC secret not configured")
-    return secret
-
-
-def _verify_timestamp(timestamp_header: str) -> int:
-    try:
-        ts = int(timestamp_header)
-    except (TypeError, ValueError):
-        raise HTTPException(status_code=401, detail="Invalid timestamp header")
-
-    now = int(time.time())
-    if abs(now - ts) > TIMESTAMP_TOLERANCE_SECONDS:
-        raise HTTPException(status_code=401, detail="Timestamp outside allowed window")
-    return ts
-
-
-_idempotency_cache: dict[str, int] = {}
-_idempotency_lock = Lock()
-
-
-def _verify_replay(key: str, timestamp: int) -> None:
-    if not key:
-        raise HTTPException(status_code=401, detail="Missing idempotency header")
-
-    cutoff = timestamp - TIMESTAMP_TOLERANCE_SECONDS
-
-    with _idempotency_lock:
-        stale_keys = [k for k, ts in _idempotency_cache.items() if ts < cutoff]
-        for stale in stale_keys:
-            _idempotency_cache.pop(stale, None)
-
-        if key in _idempotency_cache:
-            raise HTTPException(status_code=401, detail="Replay detected")
-
-        _idempotency_cache[key] = timestamp
-
-
-def _verify_signature(secret: str, timestamp: str, idempotency: str, body: bytes, signature: Optional[str]) -> None:
-    if not signature:
-        raise HTTPException(status_code=401, detail="Missing signature header")
-
-    import hmac
-    import hashlib
-
-    message = b"|".join([timestamp.encode("utf-8"), idempotency.encode("utf-8"), body])
-    digest = hmac.new(secret.encode("utf-8"), message, hashlib.sha256).hexdigest()
-    if not hmac.compare_digest(digest, signature):
-        raise HTTPException(status_code=401, detail="Invalid signature")
-
-
-async def _verify_hmac(
-    request: Request,
-    timestamp: Optional[str],
-    idempotency: Optional[str],
-    signature: Optional[str],
-) -> None:
-    secret = _load_hmac_secret()
-    if timestamp is None:
-        raise HTTPException(status_code=401, detail="Missing timestamp header")
-
-    ts = _verify_timestamp(timestamp)
-    body = await request.body()
-    if idempotency is None:
-        raise HTTPException(status_code=401, detail="Missing idempotency header")
-
-    _verify_signature(secret, timestamp, idempotency, body, signature)
-    _verify_replay(idempotency, ts)
-
-
 @app.post("/relay/status", response_model=AckResponse)
-async def relay_status(
-    request: Request,
-    evt: RelayStatus,
-    timestamp: Optional[str] = Header(None, alias=TIMESTAMP_HEADER),
-    idempotency: Optional[str] = Header(None, alias=IDEMPOTENCY_HEADER),
-    signature: Optional[str] = Header(None, alias=SIGNATURE_HEADER),
-) -> AckResponse:
-    await _verify_hmac(request, timestamp, idempotency, signature)
+async def relay_status(evt: RelayStatus) -> AckResponse:
+    # TODO: Auth/HMAC prüfen & persistieren
     return AckResponse()
-
 
 @app.post("/relay/final", response_model=AckResponse)
-async def relay_final(
-    request: Request,
-    evt: RelayFinal,
-    timestamp: Optional[str] = Header(None, alias=TIMESTAMP_HEADER),
-    idempotency: Optional[str] = Header(None, alias=IDEMPOTENCY_HEADER),
-    signature: Optional[str] = Header(None, alias=SIGNATURE_HEADER),
-) -> AckResponse:
-    await _verify_hmac(request, timestamp, idempotency, signature)
+async def relay_final(evt: RelayFinal) -> AckResponse:
+    # TODO: Auth/HMAC prüfen & persistieren
     return AckResponse()
-
-
-def _reset_hmac_state() -> None:
-    """Testing helper to reset replay cache."""
-
-    with _idempotency_lock:
-        _idempotency_cache.clear()
