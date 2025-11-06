@@ -1,0 +1,32 @@
+openapi: 3.0.3
+info:
+  title: Sheratan Core
+  version: 1.0.0
+paths:
+  /health:
+    get:
+      responses:
+        '200':
+          description: ok
+  /version:
+    get:
+      responses:
+        '200':
+          description: version
+  /api/v1/llm/complete:
+    post:
+      requestBody:
+        required: true
+      responses:
+        '200':
+          description: completion
+  /relay/status:
+    post:
+      responses:
+        '200':
+          description: accepted
+  /relay/final:
+    post:
+      responses:
+        '200':
+          description: accepted
