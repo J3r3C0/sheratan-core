@@ -1,0 +1,21 @@
+name: release-please
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/release-please-action@v4
+        with:
+          release-type: python
+          package-name: sheratan-core
+          bump-minor-pre-major: true
+          bump-patch-for-minor-pre-major: true
+          changelog-types: |
+            [{"type":"feat","section":"Features"},
+             {"type":"fix","section":"Bug Fixes"},
+             {"type":"docs","section":"Documentation"},
+             {"type":"chore","section":"Chores"},
+             {"type":"refactor","section":"Refactors"}]
