@@ -37,6 +37,15 @@ async def health():
 async def version():
     return {"name": "Sheratan Core", "version": "1.0.0"}
 
+
+@app.get("/metrics")
+async def metrics() -> Response:
+    if not METRICS_ENABLED or not generate_latest:
+        raise HTTPException(status_code=404, detail="Metrics disabled")
+
+    payload = generate_latest()
+    return Response(content=payload, media_type=CONTENT_TYPE_LATEST)
+
 @app.post("/api/v1/llm/complete", response_model=CompleteResponse)
 async def llm_complete(req: CompleteRequest):
     r = _require_router()

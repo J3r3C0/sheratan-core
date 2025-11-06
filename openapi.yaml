@@ -13,6 +13,18 @@ paths:
       responses:
         '200':
           description: version
+  /metrics:
+    get:
+      summary: Prometheus metrics
+      responses:
+        '200':
+          description: metrics snapshot
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: metrics disabled
   /api/v1/llm/complete:
     post:
       requestBody:
