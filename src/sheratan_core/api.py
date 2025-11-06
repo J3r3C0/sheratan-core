@@ -1,19 +1,26 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+
 from .registry import load_router
+from .types import LLMRouter
+from .schemas import (
+    AckResponse,
+    CompleteRequest,
+    CompleteResponse,
+    RouterHealthResponse,
+    RouterModelsResponse,
+    RelayFinal,
+    RelayStatus,
+)
 
 app = FastAPI(title="Sheratan Core", version="1.0.0")
 
-class CompleteRequest(BaseModel):
-    model: str = Field(default="gpt-4o-mini")
-    prompt: str
-    max_tokens: int = Field(default=128, ge=1, le=4096)
 
-class CompleteResponse(BaseModel):
-    model: str
-    output: str
-    usage: Dict[str, Any] = {}
+def _require_router() -> LLMRouter:
+    router = load_router()
+    if not router:
+        raise HTTPException(status_code=501, detail="No router configured")
+    return router
+
 
 @app.get("/health")
 async def health():
@@ -32,39 +39,51 @@ async def version():
 
 @app.post("/api/v1/llm/complete", response_model=CompleteResponse)
 async def llm_complete(req: CompleteRequest):
-    r = load_router()
-    if not r:
-        raise HTTPException(status_code=501, detail="No router configured")
+    r = _require_router()
     try:
         result = await r.complete(req.model_dump())
         return CompleteResponse(**result)
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Router error: {e}")
 
-# Relay callbacks (skelett)
-class RelayStatus(BaseModel):
-    job_id: str
-    trace_id: Optional[str] = None
-    phase: Optional[str] = None
-    progress: Optional[int] = None
-    message: Optional[str] = None
-    ts: Optional[str] = None
 
-class RelayFinal(BaseModel):
-    job_id: str
-    trace_id: Optional[str] = None
-    status: str
-    output: Optional[Dict[str, Any]] = None
-    error: Optional[Dict[str, Any]] = None
-    metrics: Optional[Dict[str, Any]] = None
-    ts: Optional[str] = None
+@app.get("/api/v1/router/health", response_model=RouterHealthResponse)
+async def router_health() -> RouterHealthResponse:
+    r = _require_router()
+    try:
+        status = await r.health()
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Router error: {e}")
 
-@app.post("/relay/status")
-async def relay_status(evt: RelayStatus):
+    try:
+        metadata = r.metadata()
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Router metadata error: {e}")
+
+    return RouterHealthResponse(name=r.name(), status=status, metadata=metadata)
+
+
+@app.get("/api/v1/router/models", response_model=RouterModelsResponse)
+async def router_models() -> RouterModelsResponse:
+    r = _require_router()
+    try:
+        models = r.models()
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Router error: {e}")
+
+    try:
+        metadata = r.metadata()
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Router metadata error: {e}")
+
+    return RouterModelsResponse(name=r.name(), models=models, metadata=metadata)
+
+@app.post("/relay/status", response_model=AckResponse)
+async def relay_status(evt: RelayStatus) -> AckResponse:
     # TODO: Auth/HMAC prüfen & persistieren
-    return {"ok": True}
+    return AckResponse()
 
-@app.post("/relay/final")
-async def relay_final(evt: RelayFinal):
+@app.post("/relay/final", response_model=AckResponse)
+async def relay_final(evt: RelayFinal) -> AckResponse:
     # TODO: Auth/HMAC prüfen & persistieren
-    return {"ok": True}
+    return AckResponse()
