@@ -17,16 +17,209 @@ paths:
     post:
       requestBody:
         required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteRequest'
       responses:
         '200':
           description: completion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompleteResponse'
+  /api/v1/router/health:
+    get:
+      responses:
+        '200':
+          description: router health
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouterHealthResponse'
+  /api/v1/router/models:
+    get:
+      responses:
+        '200':
+          description: router models
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouterModelsResponse'
   /relay/status:
     post:
+      parameters:
+        - name: Timestamp
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Unix epoch seconds of the callback emission.
+        - name: X-Sheratan-Idempotency
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Unique identifier preventing replay attacks and ensuring idempotent processing.
+        - name: Signature
+          in: header
+          required: true
+          schema:
+            type: string
+          description: HMAC-SHA256 signature over timestamp, idempotency, and body.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RelayStatus'
       responses:
         '200':
           description: accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AckResponse'
   /relay/final:
     post:
+      parameters:
+        - name: Timestamp
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Unix epoch seconds of the callback emission.
+        - name: X-Sheratan-Idempotency
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Unique identifier preventing replay attacks and ensuring idempotent processing.
+        - name: Signature
+          in: header
+          required: true
+          schema:
+            type: string
+          description: HMAC-SHA256 signature over timestamp, idempotency, and body.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RelayFinal'
       responses:
         '200':
           description: accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AckResponse'
+components:
+  schemas:
+    CompleteRequest:
+      type: object
+      properties:
+        model:
+          type: string
+          default: gpt-4o-mini
+        prompt:
+          type: string
+        max_tokens:
+          type: integer
+          minimum: 1
+          maximum: 4096
+          default: 128
+      required:
+        - prompt
+    CompleteResponse:
+      type: object
+      properties:
+        model:
+          type: string
+        output:
+          type: string
+        usage:
+          type: object
+          additionalProperties: true
+      required:
+        - model
+        - output
+    AckResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          default: true
+      required:
+        - ok
+    RouterHealthResponse:
+      type: object
+      properties:
+        name:
+          type: string
+        status:
+          type: object
+          additionalProperties: true
+        metadata:
+          type: object
+          additionalProperties: true
+      required:
+        - name
+        - status
+    RouterModelsResponse:
+      type: object
+      properties:
+        name:
+          type: string
+        models:
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+          additionalProperties: true
+      required:
+        - name
+        - models
+    RelayStatus:
+      type: object
+      properties:
+        job_id:
+          type: string
+        trace_id:
+          type: string
+        phase:
+          type: string
+        progress:
+          type: integer
+        message:
+          type: string
+        ts:
+          type: string
+          format: date-time
+      required:
+        - job_id
+    RelayFinal:
+      type: object
+      properties:
+        job_id:
+          type: string
+        trace_id:
+          type: string
+        status:
+          type: string
+        output:
+          type: object
+          additionalProperties: true
+        error:
+          type: object
+          additionalProperties: true
+        metrics:
+          type: object
+          additionalProperties: true
+        ts:
+          type: string
+          format: date-time
+      required:
+        - job_id
+        - status
