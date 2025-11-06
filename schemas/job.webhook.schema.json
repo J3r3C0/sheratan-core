@@ -1,0 +1,72 @@
+{
+  "type": "object",
+  "required": [
+    "job_id",
+    "job_type",
+    "params",
+    "context"
+  ],
+  "properties": {
+    "job_id": {
+      "type": "string"
+    },
+    "job_type": {
+      "type": "string"
+    },
+    "priority": {
+      "type": "string"
+    },
+    "requested_at": {
+      "type": "string"
+    },
+    "tenant": {
+      "type": "string"
+    },
+    "params": {
+      "type": "object"
+    },
+    "context": {
+      "type": "object",
+      "required": [
+        "trace_id",
+        "callback"
+      ],
+      "properties": {
+        "actor": {
+          "type": "string"
+        },
+        "trace_id": {
+          "type": "string"
+        },
+        "allowed_connectors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "callback": {
+          "type": "object",
+          "required": [
+            "status_url",
+            "final_url",
+            "auth_header"
+          ],
+          "properties": {
+            "status_url": {
+              "type": "string"
+            },
+            "final_url": {
+              "type": "string"
+            },
+            "auth_header": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "constraints": {
+      "type": "object"
+    }
+  }
+}
