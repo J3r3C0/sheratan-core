@@ -1,8 +1,10 @@
-import os, importlib
-from typing import Optional, Callable, Any
+import importlib
+from typing import Any, Callable, Optional
+
+from .config import get_settings
 
 def load_router() -> Optional[Any]:
-    spec = os.getenv("SHERATAN_ROUTER", "").strip()
+    spec = get_settings().router_spec
     if not spec:
         return None
     try:
