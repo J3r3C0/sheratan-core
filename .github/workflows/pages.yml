@@ -10,7 +10,6 @@ permissions:
 concurrency:
   group: pages
   cancel-in-progress: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,7 +19,7 @@ jobs:
         run: |
           set -e
           mkdir -p site
-          # Idempotenter $ref-Fix (Redoc braucht Fragment-Refs)
+          # toleranter $ref-Fix (idempotent)
           sed -E -i "s#\\$ref: '/components/#\\$ref: '#/components/#g" openapi.yaml || true
           cp openapi.yaml site/openapi.yaml
           cat > site/index.html <<'HTML'
@@ -47,13 +46,18 @@ jobs:
   })();
 </script>
 </body></html>
+<style>html,body,#redoc{height:100%;margin:0}</style>
+</head><body><div id="redoc"></div>
+<script>
+  const u = "openapi.yaml?v="+Date.now();
+  Redoc.init(u, {}, document.getElementById("redoc"));
+</script></body></html>
 HTML
           touch site/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
-
   deploy:
     if: github.ref == 'refs/heads/main'
     needs: build
