@@ -1,0 +1,107 @@
+    name: pypi-publish (core)
+
+    on:
+      release:
+        types: [published]
+      workflow_dispatch:
+        inputs:
+          dry_run:
+            description: "Skip upload to PyPI (build & notes only)"
+            required: false
+            default: "false"
+
+    permissions:
+      contents: write
+
+    env:
+      DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+
+    jobs:
+      preflight:
+        if: startsWith(github.event.release.tag_name, 'core-v') || github.event_name == 'workflow_dispatch'
+        runs-on: ubuntu-latest
+        steps:
+          - name: Check required secrets
+            run: |
+              if [ -z "${{ secrets.PYPI_API_TOKEN }}" ]; then
+                echo "PYPI_API_TOKEN is missing"; exit 1;
+              fi
+
+          - name: Derive version from tag
+            id: ver
+            run: |
+              TAG="${{ github.event.release.tag_name }}"
+              if [ -z "$TAG" ]; then
+                echo "tag=core-v0.0.0" >> $GITHUB_OUTPUT
+                echo "version=0.0.0" >> $GITHUB_OUTPUT
+              else
+                echo "tag=$TAG" >> $GITHUB_OUTPUT
+                echo "version=${TAG#core-v}" >> $GITHUB_OUTPUT
+              fi
+              echo "Derived version: ${{ steps.ver.outputs.version }}"
+
+      build_publish:
+        needs: preflight
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+
+          - name: Set up Python
+            uses: actions/setup-python@v5
+            with:
+              python-version: '3.11'
+
+          - name: Build sdist/wheel
+            run: |
+              python -m pip install --upgrade pip build
+              python -m build
+
+          - name: Compute SHA256 hashes
+            id: hashes
+            run: |
+              python - << 'PY'
+import hashlib, glob, os
+paths = sorted(glob.glob('dist/*'))
+lines = []
+for p in paths:
+    h = hashlib.sha256(open(p, 'rb').read()).hexdigest()
+    lines.append(f"- {os.path.basename(p)}  (sha256: {h})")
+open('dist/SHA256SUMS.txt','w',encoding='utf-8').write("\n".join(lines))
+print("\n".join(lines))
+PY
+
+          - name: Upload checksums artifact
+            uses: actions/upload-artifact@v4
+            with:
+              name: pypi-sha256-core
+              path: dist/SHA256SUMS.txt
+
+          - name: Append hashes & PyPI link to release notes
+            uses: actions/github-script@v7
+            with:
+              script: |
+
+const owner = context.repo.owner;
+const repo  = context.repo.repo;
+const tag = process.env.GITHUB_REF_NAME || (github.context.payload.release && github.context.payload.release.tag_name);
+const rel = await github.rest.repos.getReleaseByTag({ owner: owner, repo: repo, tag: tag });
+const version = tag.replace('core-v','');
+const pypiName = 'sheratan-core'; // adjust if needed
+const pypiUrl = `https://pypi.org/project/${pypiName}/${version}/`;
+const hashes = require('fs').readFileSync('dist/SHA256SUMS.txt','utf8');
+const append = `
+
+## PyPI
+${pypiUrl}
+
+### SHA256
+${hashes}
+`;
+await github.rest.repos.updateRelease({ owner: owner, repo: repo, release_id: rel.data.id, body: (rel.data.body || '') + append });
+
+
+          - name: Publish to PyPI
+            if: env.DRY_RUN != 'true'
+            uses: pypa/gh-action-pypi-publish@release/v1
+            with:
+              password: ${{ secrets.PYPI_API_TOKEN }}
