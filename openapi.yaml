@@ -2,127 +2,143 @@
 info:
   title: Sheratan Core
   version: 1.0.0
-servers:
-  - url: http://localhost:6060
-    description: Local dev
-  - url: https://j3r3c0.github.io/sheratan-core
-    description: Pages preview (spec only)
+  description: >
+    Core-API für Sheratan: Health/Version/Metrics sowie LLM-Completion
+    und Router-Endpunkte für Modellübersichten & Status.
+
+tags:
+  - name: system
+    description: Systemnahe Endpunkte (Health, Version, Metrics)
+  - name: llm
+    description: Text-Completion / Modellaufrufe
+  - name: router
+    description: Modell-Router Status & Modellauflistungen
+  - name: relay
+    description: Rückkanal-Callbacks (Status/Final) für externe Flows
 
 paths:
   /health:
     get:
-      operationId: getHealth
-      tags: [core]
+      summary: Liveness/Health-Check
+      tags: [system]
       responses:
-        '200':
+        "200":
           description: ok
 
   /version:
     get:
-      operationId: getVersion
-      tags: [core]
+      summary: Version & Build-Info
+      tags: [system]
       responses:
-        '200':
+        "200":
           description: version
 
   /metrics:
     get:
-      operationId: getMetrics
-      tags: [core]
-      summary: Prometheus metrics
+      summary: Prometheus-Metriken (wenn aktiviert)
+      tags: [system]
       responses:
-        '200':
+        "200":
           description: metrics snapshot
           content:
             text/plain:
               schema:
                 type: string
-        '404':
+        "404":
           description: metrics disabled
 
   /api/v1/llm/complete:
     post:
-      operationId: postComplete
+      summary: LLM Completion anfordern
       tags: [llm]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CompleteRequest'
+              $ref: "#/components/schemas/CompleteRequest"
+            examples:
+              minimal:
+                value:
+                  prompt: "Say Sheratan online!"
+              full:
+                value:
+                  model: "gpt-4o-mini"
+                  prompt: "Sheratan online!"
+                  max_tokens: 64
       responses:
-        '200':
+        "200":
           description: completion
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CompleteResponse'
-        '400':
-          description: bad request
+                $ref: "#/components/schemas/CompleteResponse"
+              examples:
+                ok:
+                  value:
+                    model: "gpt-4o-mini"
+                    output: "Sheratan online!"
+                    usage: {}
 
   /api/v1/router/health:
     get:
-      operationId: getRouterHealth
+      summary: Router-Gesundheit/Status
       tags: [router]
       responses:
-        '200':
+        "200":
           description: router health
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RouterHealthResponse'
+                $ref: "#/components/schemas/RouterHealthResponse"
 
   /api/v1/router/models:
     get:
-      operationId: getRouterModels
+      summary: Verfügbare Modelle des Routers
       tags: [router]
       responses:
-        '200':
+        "200":
           description: router models
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RouterModelsResponse'
+                $ref: "#/components/schemas/RouterModelsResponse"
 
   /relay/status:
     post:
-      operationId: postRelayStatus
+      summary: Asynchrones Status-Event (Zwischenstände)
       tags: [relay]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RelayStatus'
+              $ref: "#/components/schemas/RelayStatus"
       responses:
-        '200':
+        "200":
           description: accepted
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AckResponse'
-        '401':
-          description: unauthorized
+                $ref: "#/components/schemas/AckResponse"
 
   /relay/final:
     post:
-      operationId: postRelayFinal
+      summary: Finaler Callback mit Ergebnis/Fehler
       tags: [relay]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RelayFinal'
+              $ref: "#/components/schemas/RelayFinal"
       responses:
-        '200':
+        "200":
           description: accepted
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AckResponse'
-        '401':
-          description: unauthorized
+                $ref: "#/components/schemas/AckResponse"
 
 components:
   schemas:
@@ -134,62 +150,110 @@ components:
           default: gpt-4o-mini
         prompt:
           type: string
+          description: Eingabetext/Prompt
         max_tokens:
           type: integer
           minimum: 1
           maximum: 4096
           default: 128
-      required: [prompt]
+      required:
+        - prompt
+
     CompleteResponse:
       type: object
       properties:
-        model:  { type: string }
-        output: { type: string }
+        model:
+          type: string
+        output:
+          type: string
         usage:
           type: object
           additionalProperties: true
-      required: [model, output]
+      required:
+        - model
+        - output
+
     AckResponse:
       type: object
       properties:
         ok:
           type: boolean
           default: true
-      required: [ok]
+      required:
+        - ok
+
     RouterHealthResponse:
       type: object
       properties:
-        name:     { type: string }
-        status:   { type: object, additionalProperties: true }
-        metadata: { type: object, additionalProperties: true }
-      required: [name, status]
+        name:
+          type: string
+        status:
+          type: object
+          additionalProperties: true
+        metadata:
+          type: object
+          additionalProperties: true
+      required:
+        - name
+        - status
+
     RouterModelsResponse:
       type: object
       properties:
-        name:   { type: string }
-        models: { type: array, items: { type: string } }
-        metadata: { type: object, additionalProperties: true }
-      required: [name, models]
+        name:
+          type: string
+        models:
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+          additionalProperties: true
+      required:
+        - name
+        - models
+
     RelayStatus:
       type: object
       properties:
-        job_id:   { type: string, format: uuid }
-        trace_id: { type: string }
-        phase:    { type: string, enum: [queued, running, completed, failed] }
-        progress: { type: integer, minimum: 0, maximum: 100 }
-        message:  { type: string }
-        ts:       { type: string, format: date-time }
-      required: [job_id]
+        job_id:
+          type: string
+        trace_id:
+          type: string
+        phase:
+          type: string
+        progress:
+          type: integer
+        message:
+          type: string
+        ts:
+          type: string
+          format: date-time
+      required:
+        - job_id
+
     RelayFinal:
       type: object
       properties:
-        job_id:   { type: string, format: uuid }
-        trace_id: { type: string }
-        status:   { type: string, enum: [succeeded, failed, canceled] }
-        output:   { type: object, additionalProperties: true }
-        error:    { type: object, additionalProperties: true }
-        metrics:  { type: object, additionalProperties: true }
-        ts:       { type: string, format: date-time }
-      required: [job_id, status]
-
+        job_id:
+          type: string
+        trace_id:
+          type: string
+        status:
+          type: string
+        output:
+          type: object
+          additionalProperties: true
+        error:
+          type: object
+          additionalProperties: true
+        metrics:
+          type: object
+          additionalProperties: true
+        ts:
+          type: string
+          format: date-time
+      required:
+        - job_id
+        - status
 

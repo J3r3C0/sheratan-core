@@ -1,0 +1,21 @@
+﻿extends: ["spectral:oas"]
+formats: ["oas3"]
+rules:
+  oas3-schema:
+    severity: error
+  no-$ref-siblings: warn
+  operation-summary:
+    description: "Kurzer Summary-Text je Operation."
+    severity: warn
+    given: "$.paths[*][*]"
+    then:
+      field: summary
+      function: truthy
+  operation-tags:
+    description: "Mindestens ein Tag pro Operation."
+    severity: warn
+    given: "$.paths[*][*]"
+    then:
+      field: tags
+      function: length
+      functionOptions: { min: 1 }
