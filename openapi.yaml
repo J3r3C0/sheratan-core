@@ -1,20 +1,34 @@
-openapi: 3.0.3
+﻿openapi: 3.0.3
 info:
   title: Sheratan Core
   version: 1.0.0
+servers:
+  - url: http://localhost:6060
+    description: Local dev
+  - url: https://j3r3c0.github.io/sheratan-core
+    description: Pages preview (spec only)
+
 paths:
   /health:
     get:
+      operationId: getHealth
+      tags: [core]
       responses:
         '200':
           description: ok
+
   /version:
     get:
+      operationId: getVersion
+      tags: [core]
       responses:
         '200':
           description: version
+
   /metrics:
     get:
+      operationId: getMetrics
+      tags: [core]
       summary: Prometheus metrics
       responses:
         '200':
@@ -25,69 +39,91 @@ paths:
                 type: string
         '404':
           description: metrics disabled
+
   /api/v1/llm/complete:
     post:
+      operationId: postComplete
+      tags: [llm]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '/components/schemas/CompleteRequest'
+              $ref: '#/components/schemas/CompleteRequest'
       responses:
         '200':
           description: completion
           content:
             application/json:
               schema:
-                $ref: '/components/schemas/CompleteResponse'
+                $ref: '#/components/schemas/CompleteResponse'
+        '400':
+          description: bad request
+
   /api/v1/router/health:
     get:
+      operationId: getRouterHealth
+      tags: [router]
       responses:
         '200':
           description: router health
           content:
             application/json:
               schema:
-                $ref: '/components/schemas/RouterHealthResponse'
+                $ref: '#/components/schemas/RouterHealthResponse'
+
   /api/v1/router/models:
     get:
+      operationId: getRouterModels
+      tags: [router]
       responses:
         '200':
           description: router models
           content:
             application/json:
               schema:
-                $ref: '/components/schemas/RouterModelsResponse'
+                $ref: '#/components/schemas/RouterModelsResponse'
+
   /relay/status:
     post:
+      operationId: postRelayStatus
+      tags: [relay]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '/components/schemas/RelayStatus'
+              $ref: '#/components/schemas/RelayStatus'
       responses:
         '200':
           description: accepted
           content:
             application/json:
               schema:
-                $ref: '/components/schemas/AckResponse'
+                $ref: '#/components/schemas/AckResponse'
+        '401':
+          description: unauthorized
+
   /relay/final:
     post:
+      operationId: postRelayFinal
+      tags: [relay]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '/components/schemas/RelayFinal'
+              $ref: '#/components/schemas/RelayFinal'
       responses:
         '200':
           description: accepted
           content:
             application/json:
               schema:
-                $ref: '/components/schemas/AckResponse'
+                $ref: '#/components/schemas/AckResponse'
+        '401':
+          description: unauthorized
+
 components:
   schemas:
     CompleteRequest:
@@ -103,97 +139,56 @@ components:
           minimum: 1
           maximum: 4096
           default: 128
-      required:
-        - prompt
+      required: [prompt]
     CompleteResponse:
       type: object
       properties:
-        model:
-          type: string
-        output:
-          type: string
+        model:  { type: string }
+        output: { type: string }
         usage:
           type: object
           additionalProperties: true
-      required:
-        - model
-        - output
+      required: [model, output]
     AckResponse:
       type: object
       properties:
         ok:
           type: boolean
           default: true
-      required:
-        - ok
+      required: [ok]
     RouterHealthResponse:
       type: object
       properties:
-        name:
-          type: string
-        status:
-          type: object
-          additionalProperties: true
-        metadata:
-          type: object
-          additionalProperties: true
-      required:
-        - name
-        - status
+        name:     { type: string }
+        status:   { type: object, additionalProperties: true }
+        metadata: { type: object, additionalProperties: true }
+      required: [name, status]
     RouterModelsResponse:
       type: object
       properties:
-        name:
-          type: string
-        models:
-          type: array
-          items:
-            type: string
-        metadata:
-          type: object
-          additionalProperties: true
-      required:
-        - name
-        - models
+        name:   { type: string }
+        models: { type: array, items: { type: string } }
+        metadata: { type: object, additionalProperties: true }
+      required: [name, models]
     RelayStatus:
       type: object
       properties:
-        job_id:
-          type: string
-        trace_id:
-          type: string
-        phase:
-          type: string
-        progress:
-          type: integer
-        message:
-          type: string
-        ts:
-          type: string
-          format: date-time
-      required:
-        - job_id
+        job_id:   { type: string, format: uuid }
+        trace_id: { type: string }
+        phase:    { type: string, enum: [queued, running, completed, failed] }
+        progress: { type: integer, minimum: 0, maximum: 100 }
+        message:  { type: string }
+        ts:       { type: string, format: date-time }
+      required: [job_id]
     RelayFinal:
       type: object
       properties:
-        job_id:
-          type: string
-        trace_id:
-          type: string
-        status:
-          type: string
-        output:
-          type: object
-          additionalProperties: true
-        error:
-          type: object
-          additionalProperties: true
-        metrics:
-          type: object
-          additionalProperties: true
-        ts:
-          type: string
-          format: date-time
-      required:
-        - job_id
-        - status
+        job_id:   { type: string, format: uuid }
+        trace_id: { type: string }
+        status:   { type: string, enum: [succeeded, failed, canceled] }
+        output:   { type: object, additionalProperties: true }
+        error:    { type: object, additionalProperties: true }
+        metrics:  { type: object, additionalProperties: true }
+        ts:       { type: string, format: date-time }
+      required: [job_id, status]
+
