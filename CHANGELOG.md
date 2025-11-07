@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4](https://github.com/J3r3C0/sheratan-core/compare/v0.1.3...v0.1.4) (2025-11-07)
+
+
+### Documentation
+
+* **core:** add OpenAPI Docs section ([b56f814](https://github.com/J3r3C0/sheratan-core/commit/b56f8147f5bde7d8bb26f2e58633002e0c2b74ff))
+* **core:** add OpenAPI Docs section with badge and live link ([44075b3](https://github.com/J3r3C0/sheratan-core/commit/44075b344c753a98a4fd9eaa57c1fbf5704f7f8c))
+
 ## [0.1.3](https://github.com/J3r3C0/sheratan-core/compare/v0.1.2...v0.1.3) (2025-11-07)
 
 
