@@ -1,92 +1,50 @@
 ﻿name: pages
-
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch:
-
+  workflow_dispatch: {}
 permissions:
   contents: read
   pages: write
   id-token: write
-
 concurrency:
-  group: "pages"
+  group: pages
   cancel-in-progress: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-            - name: Prepare site dir
+      - uses: actions/checkout@v4
+      - name: Prepare site
         run: |
+          set -e
           mkdir -p site
-          COMMIT="${GITHUB_SHA:-manual}"
+          # toleranter $ref-Fix (idempotent)
+          sed -E -i "s#\\$ref: '/components/#\\$ref: '#/components/#g" openapi.yaml || true
+          cp openapi.yaml site/openapi.yaml
           cat > site/index.html <<'HTML'
 <!DOCTYPE html><html><head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Sheratan Core API</title>
 <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script>
-<style>
-  html,body,#redoc{height:100%;margin:0}
-  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu}
-  .err{padding:16px;color:#b00020;font-family:monospace}
-</style>
-</head>
-<body>
-<div id="redoc"></div>
+<style>html,body,#redoc{height:100%;margin:0}</style>
+</head><body><div id="redoc"></div>
 <script>
-  (async function(){
-    const specUrl = "openapi.yaml?v="+(new Date().getTime());
-    try {
-      // Vorab HEAD-Check für klares Fehlersignal
-      const head = await fetch(specUrl, { method: "HEAD" });
-      if (!head.ok) throw new Error("Spec HEAD "+head.status);
-      await Redoc.init(specUrl, {}, document.getElementById('redoc'));
-    } catch(e) {
-      console.error("Redoc init failed", e);
-      document.body.innerHTML =
-        '<pre class="err">Redoc init failed: '+(e && e.message || e)+'\\n' +
-        'Spec URL: '+specUrl+'\\n' +
-        'Check that openapi.yaml is deployed on the same path.</pre>';
-    }
-  })();
-</script>
-</body></html>
+  const u = "openapi.yaml?v="+Date.now();
+  Redoc.init(u, {}, document.getElementById("redoc"));
+</script></body></html>
 HTML
-
-          # OpenAPI kopieren oder Minimal-Spec erzeugen
-          if [ -f openapi.yaml ]; then
-            cp openapi.yaml site/openapi.yaml
-          else
-            cat > site/openapi.yaml <<'YAML'
-openapi: 3.0.3
-info: { title: Sheratan Core API, version: "0.0.0" }
-paths: { /health: { get: { summary: Health, responses: { "200": { description: OK } } } } }
-YAML
-          fi
-
-          # Jekyll aus
           touch site/.nojekyll
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: site
-
   deploy:
+    needs: build
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    needs: build
-    runs-on: ubuntu-latest
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
-
