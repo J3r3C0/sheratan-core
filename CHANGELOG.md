@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5](https://github.com/J3r3C0/sheratan-core/compare/v0.1.4...v0.1.5) (2025-11-07)
+
+
+### Bug Fixes
+
+* **docs:** Pages deploy (Actions + CDN Redoc) ([06e878b](https://github.com/J3r3C0/sheratan-core/commit/06e878b6b41f692c2d26dd4f21a17ba4b72b847d))
+* **docs:** Pages via Actions (configure-pages + deploy-pages) ([6665e37](https://github.com/J3r3C0/sheratan-core/commit/6665e3770cab5797aea97ac2f446f7caffb5a56a))
+
 ## [0.1.4](https://github.com/J3r3C0/sheratan-core/compare/v0.1.3...v0.1.4) (2025-11-07)
 
 
