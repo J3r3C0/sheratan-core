@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1](https://github.com/J3r3C0/sheratan-core/compare/v0.1.0...v0.1.1) (2025-11-07)
+
+
+### Documentation
+
+* **core:** add Quality Status badges + Release How-To ([c98309c](https://github.com/J3r3C0/sheratan-core/commit/c98309c3d47e01dbe7febe0642301476c2a385ad))
+* **core:** Quality badges + Release How-To ([d5c08a5](https://github.com/J3r3C0/sheratan-core/commit/d5c08a55215daecc42080934a7ec9c5d57a8167e))
+
 ## 0.1.0 (2025-11-07)
 
 
