@@ -5,6 +5,8 @@ from .registry import load_router
 from .security import verify_hmac
 from .idempotency import get_store
 from .metrics import metrics_endpoint, TimingMiddleware, ENABLED as METRICS_ENABLED
+from fastapi import Body, HTTPException
+from .router_client import RouterClient
 
 app = FastAPI(title="Sheratan Core", version="1.1.0")
 if METRICS_ENABLED:
@@ -20,6 +22,21 @@ class CompleteResponse(BaseModel):
     output: str
     usage: Dict[str, Any] = {}
 
+@app.post("/api/v1/llm/complete")
+def llm_complete(body: dict = Body(...)):
+    try:
+        prompt = str(body.get("prompt") or "")
+        if not prompt:
+            raise HTTPException(422, "prompt required")
+        max_tokens = int(body.get("max_tokens") or 128)
+        model = body.get("model")
+        rc = RouterClient()
+        return rc.complete(prompt=prompt, max_tokens=max_tokens, model=model)
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(e.response.status_code, f"router error: {e.response.text[:400]}")
+    except Exception as e:
+        raise HTTPException(500, f"llm proxy error: {e}") 
+        
 @app.get("/health")
 async def health():
     r = load_router()
