@@ -1,0 +1,13 @@
+﻿name: spectral
+on:
+  pull_request:
+  push:
+    branches: [ "main" ]
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm i -D @stoplight/spectral-cli
+      - name: Lint OpenAPI
+        run: npx spectral lint openapi.yaml --ruleset .spectral.yaml --display-only-failures --fail-severity=error
