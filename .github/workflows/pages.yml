@@ -1,8 +1,9 @@
-﻿name: pages
+name: pages
 
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch: {}
   workflow_dispatch:
 
 permissions:
@@ -43,7 +44,7 @@ jobs:
   (async function(){
     const specUrl = "openapi.yaml?v="+(new Date().getTime());
     try {
-      // Vorab HEAD-Check für klares Fehlersignal
+      // Vorab HEAD-Check f�r klares Fehlersignal
       const head = await fetch(specUrl, { method: "HEAD" });
       if (!head.ok) throw new Error("Spec HEAD "+head.status);
       await Redoc.init(specUrl, {}, document.getElementById('redoc'));
@@ -81,6 +82,7 @@ YAML
           path: site
 
   deploy:
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -90,3 +92,6 @@ YAML
       - id: deployment
         uses: actions/deploy-pages@v4
 
+
+
+# guard (deploy nur auf main)
