@@ -21,8 +21,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      # Paywall-freie Variante: Redoc per CDN, OpenAPI liegt im Repo (../openapi.yaml)
       - name: Build Redoc (free via CDN)
         run: |
           mkdir -p site
@@ -37,15 +35,12 @@ jobs:
               <style>body{margin:0}</style>
             </head>
             <body>
-              <!-- OpenAPI im Repo-Root, eine Ebene über /site -->
               <redoc spec-url="../openapi.yaml"></redoc>
             </body>
           </html>
           HTML
-
       - name: Setup Pages
         uses: actions/configure-pages@v5
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
