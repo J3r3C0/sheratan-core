@@ -25,3 +25,17 @@ set SHERATAN_ROUTER=sheratan_router_openai.adapter:create_router
 
 ## Schemas
 Siehe `schemas/`. JSON-Schema ist die Quelle der Wahrheit; OpenAPI referenziert diese.
+
+## Quality Status
+
+[![CI](https://github.com/J3r3C0/sheratan-core/actions/workflows/python-quality.yml/badge.svg)](https://github.com/J3r3C0/sheratan-core/actions/workflows/python-quality.yml)
+[![OpenAPI Docs](https://img.shields.io/badge/OpenAPI-Docs-00A3D9)](https://J3r3C0.github.io/sheratan-core)
+[![PyPI](https://img.shields.io/pypi/v/sheratan-core.svg)](https://pypi.org/project/sheratan-core/)
+[![Release Please](https://img.shields.io/badge/Release--Please-enabled-success)](https://github.com/googleapis/release-please)
+
+### Release How-To
+1. Conventional Commit mergen (feat/fix/chore/docs…).
+2. **release-please** öffnet Auto-PR ? mergen.
+3. Tag core-vX.Y.Z wird erstellt ? PyPI-Publish läuft.
+4. Release-Notes enthalten OpenAPI-Link & SHA256 der Wheels.
+
