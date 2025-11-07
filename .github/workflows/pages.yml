@@ -1,0 +1,64 @@
+﻿name: pages
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare site dir
+        run: |
+          mkdir -p site
+          # Index mit Redoc (CDN) erzeugen
+          cat > site/index.html <<'HTML'
+<!DOCTYPE html><html><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sheratan Core API</title>
+<script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script>
+<style>html,body{margin:0;height:100%} body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;}</style>
+</head><body><redoc spec-url="openapi.yaml"></redoc></body></html>
+HTML
+          # OpenAPI kopieren (fällt notfalls auf Minimal-Spec zurück)
+          if [ -f openapi.yaml ]; then
+            cp openapi.yaml site/openapi.yaml
+          else
+            cat > site/openapi.yaml <<'YAML'
+openapi: 3.0.3
+info: { title: Sheratan Core API, version: "0.0.0" }
+paths: { /health: { get: { summary: Health, responses: { "200": { description: OK } } } } }
+YAML
+          fi
+          touch site/.nojekyll
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

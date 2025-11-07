@@ -55,3 +55,8 @@ from the latest \openapi.yaml\ in the main branch.
 ## OpenAPI Docs
 Die Live-Doku wird via GitHub Pages bereitgestellt:
 - **Redoc:** https://j3r3c0.github.io/sheratan-core/
+
+### OpenAPI Docs (GitHub Pages via Actions)
+- **URL:** https://j3r3c0.github.io/sheratan-core/
+- Quelle: Branch \gh-pages\ (automatisch aus Actions deployed). Kein \/docs\ mehr auf \main\.
+
