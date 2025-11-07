@@ -32,14 +32,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CompleteRequest'
+              $ref: '/components/schemas/CompleteRequest'
       responses:
         '200':
           description: completion
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CompleteResponse'
+                $ref: '/components/schemas/CompleteResponse'
   /api/v1/router/health:
     get:
       responses:
@@ -48,7 +48,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RouterHealthResponse'
+                $ref: '/components/schemas/RouterHealthResponse'
   /api/v1/router/models:
     get:
       responses:
@@ -57,7 +57,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RouterModelsResponse'
+                $ref: '/components/schemas/RouterModelsResponse'
   /relay/status:
     post:
       requestBody:
@@ -65,14 +65,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RelayStatus'
+              $ref: '/components/schemas/RelayStatus'
       responses:
         '200':
           description: accepted
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AckResponse'
+                $ref: '/components/schemas/AckResponse'
   /relay/final:
     post:
       requestBody:
@@ -80,14 +80,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RelayFinal'
+              $ref: '/components/schemas/RelayFinal'
       responses:
         '200':
           description: accepted
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AckResponse'
+                $ref: '/components/schemas/AckResponse'
 components:
   schemas:
     CompleteRequest:
