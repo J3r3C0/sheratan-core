@@ -3,19 +3,21 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: write        # Release, Tags, Files
+  pull-requests: write   # PRs erstellen
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: google-github-actions/release-please-action@v4
+      - uses: googleapis/release-please-action@v4
         with:
+          # Für Single-Package-Repo reicht das:
           release-type: python
-          package-name: sheratan-core
-          bump-minor-pre-major: true
-          bump-patch-for-minor-pre-major: true
-          changelog-types: |
-            [{"type":"feat","section":"Features"},
-             {"type":"fix","section":"Bug Fixes"},
-             {"type":"docs","section":"Documentation"},
-             {"type":"chore","section":"Chores"},
-             {"type":"refactor","section":"Refactors"}]
+          path: .
+          target-branch: main
+          # Optional (empfohlen für flexible Sections):
+          config-file: .release-please-config.json
+          manifest-file: .release-please-manifest.json
