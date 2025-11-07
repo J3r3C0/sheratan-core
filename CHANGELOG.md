@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6](https://github.com/J3r3C0/sheratan-core/compare/v0.1.5...v0.1.6) (2025-11-07)
+
+
+### Documentation
+
+* **core:** activate GitHub Pages (docs/ + Redoc) ([7d045d2](https://github.com/J3r3C0/sheratan-core/commit/7d045d2b009e635ca8c95240902bd01574187959))
+* **core:** add docs/ (index.html + openapi.yaml + .nojekyll) for Pages ([0ce5fd6](https://github.com/J3r3C0/sheratan-core/commit/0ce5fd61b18e1960cebb4390b8944a2588fd1631))
+
 ## [0.1.5](https://github.com/J3r3C0/sheratan-core/compare/v0.1.4...v0.1.5) (2025-11-07)
 
 
