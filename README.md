@@ -28,15 +28,15 @@ Siehe `schemas/`. JSON-Schema ist die Quelle der Wahrheit; OpenAPI referenziert 
 
 ## Quality Status
 
-[![CI](https://github.com/J3r3C0/sheratan-core/actions/workflows/python-quality.yml/badge.svg)](https://github.com/J3r3C0/sheratan-core/actions/workflows/python-quality.yml)
+[![CI](https://github.com/J3r3C0/sheratan-core/actions/workflows/ci.yml/badge.svg)](https://github.com/J3r3C0/sheratan-core/actions/workflows/ci.yml)
 [![OpenAPI Docs](https://img.shields.io/badge/OpenAPI-Docs-00A3D9)](https://J3r3C0.github.io/sheratan-core)
 [![PyPI](https://img.shields.io/pypi/v/sheratan-core.svg)](https://pypi.org/project/sheratan-core/)
 [![Release Please](https://img.shields.io/badge/Release--Please-enabled-success)](https://github.com/googleapis/release-please)
 
 ### Release How-To
-1. Conventional Commit mergen (feat/fix/chore/docs…).
-2. **release-please** öffnet Auto-PR ? mergen.
-3. Tag core-vX.Y.Z wird erstellt ? PyPI-Publish läuft.
+1. Conventional Commit mergen (feat/fix/chore/docsï¿½).
+2. **release-please** ï¿½ffnet Auto-PR ? mergen.
+3. Tag core-vX.Y.Z wird erstellt ? PyPI-Publish lï¿½uft.
 4. Release-Notes enthalten OpenAPI-Link & SHA256 der Wheels.
 
 
@@ -51,4 +51,5 @@ from the latest \openapi.yaml\ in the main branch.
 - **Docs URL:** [https://j3r3c0.github.io/sheratan-core](https://j3r3c0.github.io/sheratan-core)
 - **Spec file:** [openapi.yaml](./openapi.yaml)
 - **Renderer:** Redoc (CDN build, no paywall)
+- **Deployment Guide:** See [GITHUB_PAGES_DEPLOYMENT.md](./GITHUB_PAGES_DEPLOYMENT.md) for instructions on triggering the deployment
 
