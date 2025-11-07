@@ -39,3 +39,16 @@ Siehe `schemas/`. JSON-Schema ist die Quelle der Wahrheit; OpenAPI referenziert 
 3. Tag core-vX.Y.Z wird erstellt ? PyPI-Publish läuft.
 4. Release-Notes enthalten OpenAPI-Link & SHA256 der Wheels.
 
+
+## OpenAPI Docs
+
+[![OpenAPI](https://img.shields.io/badge/OpenAPI-Docs-00A3D9?logo=openapiinitiative&logoColor=white)](https://j3r3c0.github.io/sheratan-core)
+
+This project publishes its API reference automatically via **GitHub Pages**.
+Each new release updates the [Redoc](https://github.com/Redocly/redoc) preview
+from the latest \openapi.yaml\ in the main branch.
+
+- **Docs URL:** [https://j3r3c0.github.io/sheratan-core](https://j3r3c0.github.io/sheratan-core)
+- **Spec file:** [openapi.yaml](./openapi.yaml)
+- **Renderer:** Redoc (CDN build, no paywall)
+
