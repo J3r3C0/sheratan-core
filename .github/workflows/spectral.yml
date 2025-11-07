@@ -8,6 +8,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm i -D @stoplight/spectral-cli
-      - name: Lint OpenAPI
-        run: npx spectral lint openapi.yaml --ruleset .spectral.yaml --display-only-failures --fail-severity=error
+      - run:       - name: Lint OpenAPI
+        run: npx @stoplight/spectral-cli lint openapi.yaml --ruleset .spectral.yaml --display-only-failures --fail-severity=error
+
