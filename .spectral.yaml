@@ -1,0 +1,30 @@
+extends:
+  - "spectral:oas"
+
+rules:
+  operation-summary-defined:
+    description: "Jede Operation braucht eine kurze summary."
+    message: "Fehlende summary bei {{path}} {{method}}"
+    severity: error
+    given: "$.paths[*][*]"
+    then:
+      field: summary
+      function: truthy
+
+  tags-present:
+    description: "Jede Operation sollte wenigstens einen Tag haben."
+    severity: error
+    given: "$.paths[*][*]"
+    then:
+      field: tags
+      function: truthy
+
+  no-absolute-component-refs:
+    description: "Komponenten-Refs als Fragment (#/components/...), keine Pfade."
+    message: "Nutze Fragment-Ref: '#/components/...' statt {{value}}"
+    severity: error
+    given: "$..['$ref']"
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: "^/?components/"
