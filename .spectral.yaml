@@ -1,7 +1,6 @@
-﻿extends:
+extends:
   - "spectral:oas"
 
-# nur Fehler zeigen; Warnungen ausfiltern kannst du via CLI-Flags
 rules:
   operation-summary-defined:
     description: "Jede Operation braucht eine kurze summary."
@@ -12,37 +11,6 @@ rules:
       field: summary
       function: truthy
 
-  operationId-unique:
-    description: "operationId muss eindeutig sein."
-    severity: error
-    given: "$.paths[*][*].operationId"
-    then:
-      function: falsy # (wir prüfen global unten per uniqueItems)
-    # Hinweis: uniqueness check übernehmen wir über eine Sammelregel:
-  operationIds-are-unique:
-    description: "Alle operationIds müssen eindeutig sein (global)."
-    severity: error
-    given: "$"
-    then:
-      function: schema
-      functionOptions:
-        schema:
-          type: object
-          properties:
-            paths:
-              type: object
-              additionalProperties:
-                type: object
-                additionalProperties:
-                  type: object
-                  properties:
-                    operationId:
-                      type: string
-          # Custom uniqueness-Check
-          allOf:
-            - $comment: "Extrahiere alle operationIds und prüfe unique via patternProperties Hack"
-          required: [paths]
-
   tags-present:
     description: "Jede Operation sollte wenigstens einen Tag haben."
     severity: error
@@ -52,11 +20,11 @@ rules:
       function: truthy
 
   no-absolute-component-refs:
-    description: "Komponenten-Refs als Fragments (#/components/...), keine Pfade."
+    description: "Komponenten-Refs als Fragment (#/components/...), keine Pfade."
     message: "Nutze Fragment-Ref: '#/components/...' statt {{value}}"
     severity: error
     given: "$..['$ref']"
     then:
       function: pattern
       functionOptions:
-        notMatch: "^/'?components/"
+        notMatch: "^/?components/"
