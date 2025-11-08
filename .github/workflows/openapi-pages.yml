@@ -29,7 +29,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p site
-          # normalize $ref anchors to fragments (#/...)
+          # normalize $ref anchors to fragments (#/components/…)
           sed -E -i "s#\\$ref: '/components/#\\$ref: '#/components/#g" openapi.yaml || true
           cp openapi.yaml site/openapi.yaml
 
@@ -57,9 +57,11 @@ jobs:
 </script></body></html>
 HTML
 
+          # disable Jekyll to keep file paths as-is
           touch site/.nojekyll
 
       - uses: actions/configure-pages@v5
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

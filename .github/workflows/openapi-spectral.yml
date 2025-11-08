@@ -1,0 +1,31 @@
+﻿name: openapi-spectral
+on:
+  push:
+    branches: [ "main" ]
+    paths: [ "openapi.yaml", ".spectral.yaml" ]
+  pull_request:
+    branches: [ "main" ]
+    paths: [ "openapi.yaml", ".spectral.yaml" ]
+  workflow_dispatch: {}
+jobs:
+  spectral:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - name: Install Spectral CLI
+        run: npm i -g @stoplight/spectral-cli@6
+      - name: Lint OpenAPI (errors fail, warnings allowed)
+        run: spectral lint openapi.yaml --display-only-failures --fail-severity=error
+      - name: Upload SARIF (non-blocking)
+        if: always()
+        run: spectral lint openapi.yaml -f sarif > spectral.sarif || true
+      - name: Upload artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spectral-results
+          path: spectral.sarif
