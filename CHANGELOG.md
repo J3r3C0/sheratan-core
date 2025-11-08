@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.11](https://github.com/J3r3C0/sheratan-core/compare/v0.1.10...v0.1.11) (2025-11-08)
+
+
+### Documentation
+
+* **gif:** auto-tag demo + render workflow ([8e09fb1](https://github.com/J3r3C0/sheratan-core/commit/8e09fb106c6d479f0df69a7346a42d564ae743c2))
+* Sheratan Tech-Noir GIF render + Actions workflow (auto-tag demo) ([0be0407](https://github.com/J3r3C0/sheratan-core/commit/0be040747ee99dc47b6d76ae13c4689cfd17b0ee))
+
 ## [0.1.10](https://github.com/J3r3C0/sheratan-core/compare/v0.1.9...v0.1.10) (2025-11-07)
 
 
