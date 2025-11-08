@@ -1,0 +1,52 @@
+﻿name: render-docs
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "docs/gifs/**"
+      - "docs/scripts/**"
+      - ".github/workflows/render-docs.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install pillow "imageio[ffmpeg]"
+
+      - name: Render Sheratan Auto-Tag GIF
+        run: |
+          python docs/scripts/render_gif.py
+
+      - name: Upload artifact (preview)
+        uses: actions/upload-artifact@v4
+        with:
+          name: auto-tag-demo
+          path: docs/gifs/auto-tag-demo.gif
+
+      - name: Commit rendered GIF back to repo (if changed)
+        shell: bash
+        run: |
+          set -e
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- docs/gifs/auto-tag-demo.gif; then
+            git add docs/gifs/auto-tag-demo.gif
+            git commit -m "docs: update auto-tag demo gif"
+            git push
+          else
+            echo "No changes to commit."
+          fi
