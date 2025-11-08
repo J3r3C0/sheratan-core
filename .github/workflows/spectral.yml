@@ -9,6 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run:       - name: Lint OpenAPI
-        run: npx @stoplight/spectral-cli lint openapi.yaml --ruleset .spectral.yaml --display-only-failures --fail-severity=error
+        run: npx @stoplight/spectral-cli lint openapi.yaml --ruleset .spectral.js --display-only-failures --fail-severity=error
+
 
 
