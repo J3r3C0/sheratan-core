@@ -20,6 +20,8 @@ paths:
   /health:
     get:
       summary: Liveness/Health-Check
+      tags:
+        - system
       tags: [system]
       responses:
         "200":
@@ -28,6 +30,8 @@ paths:
   /version:
     get:
       summary: Version & Build-Info
+      tags:
+        - system
       tags: [system]
       responses:
         "200":
@@ -36,6 +40,8 @@ paths:
   /metrics:
     get:
       summary: Prometheus-Metriken (wenn aktiviert)
+      tags:
+        - system
       tags: [system]
       responses:
         "200":
@@ -50,6 +56,8 @@ paths:
   /api/v1/llm/complete:
     post:
       summary: LLM Completion anfordern
+      tags:
+        - llm
       tags: [llm]
       requestBody:
         required: true
@@ -83,6 +91,8 @@ paths:
   /api/v1/router/health:
     get:
       summary: Router-Gesundheit/Status
+      tags:
+        - router
       tags: [router]
       responses:
         "200":
@@ -95,6 +105,8 @@ paths:
   /api/v1/router/models:
     get:
       summary: Verfügbare Modelle des Routers
+      tags:
+        - router
       tags: [router]
       responses:
         "200":
@@ -107,6 +119,8 @@ paths:
   /relay/status:
     post:
       summary: Asynchrones Status-Event (Zwischenstände)
+      tags:
+        - relay
       tags: [relay]
       requestBody:
         required: true
@@ -125,6 +139,8 @@ paths:
   /relay/final:
     post:
       summary: Finaler Callback mit Ergebnis/Fehler
+      tags:
+        - relay
       tags: [relay]
       requestBody:
         required: true
@@ -256,4 +272,5 @@ components:
       required:
         - job_id
         - status
+
 
