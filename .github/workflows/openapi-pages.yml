@@ -1,0 +1,75 @@
+﻿name: openapi-pages
+on:
+  release:
+    types: [published]
+  workflow_dispatch: {}
+  push:
+    branches: [ "main" ]
+    paths:
+      - "openapi.yaml"
+      - ".github/workflows/openapi-pages.yml"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare static site (Redoc + spec)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p site
+          # normalize $ref anchors to fragments (#/...)
+          sed -E -i "s#\\$ref: '/components/#\\$ref: '#/components/#g" openapi.yaml || true
+          cp openapi.yaml site/openapi.yaml
+
+          cat > site/index.html <<'HTML'
+<!doctype html><html><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sheratan Core API</title>
+<script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script>
+<style>html,body,#redoc{height:100%;margin:0}</style>
+</head><body><div id="redoc"></div>
+<script>
+(async function(){
+  const specUrl = "openapi.yaml?v="+(new Date()).getTime();
+  try {
+    const head = await fetch(specUrl,{method:"HEAD"});
+    if(!head.ok) throw new Error("Spec not found ("+head.status+")");
+    Redoc.init(specUrl, {}, document.getElementById('redoc'));
+  } catch(e) {
+    console.error(e);
+    document.body.innerHTML =
+      '<pre style="padding:16px;white-space:pre-wrap;background:#111;color:#eee">'+
+      'Redoc init failed: '+(e && e.message || e)+'\nURL: '+specUrl+'\n</pre>';
+  }
+})();
+</script></body></html>
+HTML
+
+          touch site/.nojekyll
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
