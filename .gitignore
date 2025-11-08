@@ -1,0 +1,19 @@
+# build / tools
+site/
+dist/
+build/
+*.log
+
+# node / web
+node_modules/
+coverage/
+*.tsbuildinfo
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# pages/jekyll artefakte
+docs/_site/
