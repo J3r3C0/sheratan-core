@@ -60,3 +60,15 @@ Die Live-Doku wird via GitHub Pages bereitgestellt:
 - **URL:** https://j3r3c0.github.io/sheratan-core/
 - Quelle: Branch \gh-pages\ (automatisch aus Actions deployed). Kein \/docs\ mehr auf \main\.
 
+## Auto-Tag via Actions
+
+Der Auto-Tag-Workflow erzeugt auf Knopfdruck einen neuen Tag (z. B. `sdk-ts-v0.2.3`) und kann optional ein Release anlegen.
+Das **Auto-Tag-GIF** demonstriert die Bedienung:
+
+![Auto-Tag Demo](docs/gifs/auto-tag-demo.gif)
+
+**Ablauf:**
+1. Reiter **Actions** ? Workflow **Auto-Tag** auswählen
+2. Parameter ausfüllen (Tag-Prefix/Version)
+3. **Run workflow**
+4. Tag wird gepusht, optionale Release-Erstellung & Folge-Jobs (PyPI/npm/Pages) starten automatisch
