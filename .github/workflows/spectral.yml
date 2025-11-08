@@ -11,3 +11,4 @@ jobs:
       - run:       - name: Lint OpenAPI
         run: npx @stoplight/spectral-cli lint openapi.yaml --ruleset .spectral.yaml --display-only-failures --fail-severity=error
 
+

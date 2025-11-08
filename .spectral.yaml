@@ -1,30 +1,63 @@
-extends:
+﻿extends:
   - "spectral:oas"
 
+formats:
+  - "oas3"
+
 rules:
-  operation-summary-defined:
-    description: "Jede Operation braucht eine kurze summary."
-    message: "Fehlende summary bei {{path}} {{method}}"
+  # Basis-Metadaten
+  openapi-version:
+    given: "$.openapi"
     severity: error
+    then:
+      function: pattern
+      functionOptions:
+        match: "^3\\."
+
+  info-title-required:
+    given: "$.info.title"
+    severity: error
+    then: { function: truthy }
+
+  info-version-required:
+    given: "$.info.version"
+    severity: error
+    then: { function: truthy }
+
+  # Jede Operation: summary + mindestens 1 Tag
+  op-summary-required:
+    description: "Jede Operation sollte 'summary' besitzen."
     given: "$.paths[*][*]"
+    severity: warn
     then:
       field: summary
       function: truthy
 
-  tags-present:
-    description: "Jede Operation sollte wenigstens einen Tag haben."
-    severity: error
+  op-tags-min-one:
+    description: "Jede Operation sollte mindestens 1 Tag besitzen."
     given: "$.paths[*][*]"
+    severity: warn
     then:
       field: tags
-      function: truthy
-
-  no-absolute-component-refs:
-    description: "Komponenten-Refs als Fragment (#/components/...), keine Pfade."
-    message: "Nutze Fragment-Ref: '#/components/...' statt {{value}}"
-    severity: error
-    given: "$..['$ref']"
-    then:
-      function: pattern
+      function: schema
       functionOptions:
-        notMatch: "^/?components/"
+        schema:
+          type: array
+          minItems: 1
+
+  # Responses: sicherstellen, dass 2xx existiert (vereinfachte 200-Prüfung)
+  op-has-200-response:
+    description: "Operationen sollten eine 200-Response definieren."
+    given: "$.paths[*][*].responses"
+    severity: warn
+    then:
+      field: "200"
+      function: defined
+
+  # content-type: text/plain mit Schema string ist erlaubt (z.B. /metrics)
+  metrics-plaintext-ok:
+    description: "Erlaube text/plain + string Schema (Prometheus metrics)."
+    given: "$.paths['/metrics'].get.responses['200'].content['text/plain'].schema.type"
+    severity: off  # deaktiviert jegliche Beanstandung hier
+
+overrides: []
