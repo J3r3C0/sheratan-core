@@ -1,0 +1,21 @@
+# Error Fallback Prompt
+# Used when LCP parsing fails
+
+Your last response could not be parsed as valid LCP.
+
+Please respond with SIMPLER format:
+
+```json
+{
+  "ok": true,
+  "action": "create_followup_jobs",
+  "commentary": "One sentence",
+  "new_jobs": [
+    {"task": "task_name", "params": {}}
+  ]
+}
+```
+
+End with: }}}
+
+Task: {{task_description}}

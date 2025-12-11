@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+*.min.js
+*.min.css
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker
+*.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Core v2 (separate repo)
+core/sheratan_core_v2/
+
+# Data & Cache
+data/
+*.sqlite
+*.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Chrome Debug Profile
+chrome-sheratan-debug/
