@@ -5,7 +5,7 @@
 **Datei:** `index.html`  
 **Öffnen:**
 ```
-file:///C:/sheratan-core-poc/index.html
+file:///c:/Sheratan/2_sheratan_coreindex.html
 ```
 
 Diese Seite verlinkt alle verfügbaren Dashboards!
@@ -67,9 +67,9 @@ http://localhost:8001/static/sheratan-minimal-control.html
 
 ### **Direkte Datei-Links:**
 ```
-file:///C:/sheratan-core-poc/selfloop-dashboard.html
-file:///C:/sheratan-core-poc/sheratan-dashboard.html
-file:///C:/sheratan-core-poc/index.html  (Zentrale Übersicht)
+file:///c:/Sheratan/2_sheratan_coreselfloop-dashboard.html
+file:///c:/Sheratan/2_sheratan_coresheratan-dashboard.html
+file:///c:/Sheratan/2_sheratan_coreindex.html  (Zentrale Übersicht)
 ```
 
 **⚠️ Hinweis:** Direkte `file://` Links haben CORS-Probleme! Verwenden Sie den Core-Server (`/static/`).
@@ -94,7 +94,7 @@ file:///C:/sheratan-core-poc/index.html  (Zentrale Übersicht)
 2. Öffnen: `http://localhost:8001/static/selfloop-dashboard.html`
 
 **Für Übersicht:**
-1. Öffnen: `file:///C:/sheratan-core-poc/index.html`
+1. Öffnen: `file:///c:/Sheratan/2_sheratan_coreindex.html`
 2. Dashboard aus der Liste auswählen
 
 ---

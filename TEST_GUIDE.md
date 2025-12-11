@@ -39,7 +39,7 @@ Falls Port 8001 nicht erreichbar:
 - Core läuft auf Port **8001**
 - Alternativ kannst du auch direkt die Datei öffnen:
   ```
-  file:///c:/sheratan-core-poc/control-dashboard.html
+  file:///c:/Sheratan/2_sheratan_corecontrol-dashboard.html
   ```
   Und manuell auf `http://localhost:8001` konfigurieren
 
