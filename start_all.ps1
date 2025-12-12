@@ -32,7 +32,7 @@ Write - Host "Starting Chrome in Debug Mode..." - ForegroundColor Yellow Start -
         Process powershell - ArgumentList "-NoExit",
     "-Command",
     "cd C:\sheratan-core-poc\backend; uvicorn main:app --host 0.0.0.0 --port "
-    "8088 --reload" Start -
+    "8000 --reload" Start -
         Sleep 3
 
 # 4. Start WebRelay

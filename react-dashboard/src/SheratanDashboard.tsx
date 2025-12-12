@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 
 const CORE_BASE_URL = "http://localhost:8001";
 const WEBRELAY_BASE_URL = "http://localhost:3000";
-const BACKEND_BASE_URL = "http://localhost:8088";  // Boss directive 4.1
+const BACKEND_BASE_URL = "http://localhost:8000";  // Boss directive 4.1
 
 
 type StatusResponse = {
