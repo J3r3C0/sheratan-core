@@ -13,7 +13,7 @@ Bitte starte Docker Desktop, bevor du fortfährst.
 ### 1️⃣ System starten
 
 ```bash
-cd c:\sheratan-core-poc
+cd c:\Sheratan\2_sheratan_core
 docker-compose up --build
 ```
 
@@ -98,7 +98,7 @@ Dann auf **"Send to WebRelay"** klicken.
 In einem zweiten Terminal:
 
 ```bash
-cd c:\sheratan-core-poc
+cd c:\Sheratan\2_sheratan_core
 docker-compose logs -f worker core
 ```
 
