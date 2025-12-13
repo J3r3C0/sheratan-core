@@ -1,0 +1,14 @@
+asyncio
+pexpect
+requests
+pycryptodome
+fastapi
+uvicorn
+js2py
+websockets
+watchdog
+pydantic
+
+PyNaCl
+
+pyyaml
