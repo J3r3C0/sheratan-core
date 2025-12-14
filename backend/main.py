@@ -19,7 +19,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173", 
         "http://localhost:3000", 
-        "http://localhost:3002",  # Sheratan Dashboard
+        "http://localhost:3001",  # Sheratan React Dashboard
+        "http://localhost:3002",  # Sheratan Dashboard alt
         "http://localhost:8000", 
         "http://localhost:8001"
     ],
