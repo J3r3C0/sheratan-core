@@ -11,51 +11,47 @@
     },
   },
   rules: {
-    'openapi-version-3': {
-      given: '$.openapi',
-      severity: 'error',
+    "openapi-version-3": {
+      given: "$.openapi",
+      severity: "error",
+      then: { function: "pattern", functionOptions: { match: "^3\\." } }
+    },
+    "info-title-required": {
+      given: "$.info.title",
+      severity: "error",
+      then: { function: "truthy" }
+    },
+    "info-version-required": {
+      given: "$.info.version",
+      severity: "error",
+      then: { function: "truthy" }
+    },
+    "op-summary-required": {
+      description: "Each operation should have a summary.",
+      given: "$.paths[*][*]",
+      severity: "warn",
+      then: { field: "summary", function: "truthy" }
+    },
+    "op-tags-min-one": {
+      description: "Each operation should have at least one tag.",
+      given: "$.paths[*][*]",
+      severity: "warn",
       then: {
-        function: 'pattern',
-        functionOptions: { match: '^3\\.' },
-      },
+        field: "tags",
+        function: "schema",
+        functionOptions: { schema: { type: "array", minItems: 1 } }
+      }
     },
-    'info-title-required': {
-      given: '$.info.title',
-      severity: 'error',
-      then: { function: 'truthy' },
+    "op-has-2xx-response": {
+      description: "Operations should define at least one 2xx response.",
+      given: "$.paths[*][*].responses",
+      severity: "warn",
+      then: { function: "has2xx" }
     },
-    'info-version-required': {
-      given: '$.info.version',
-      severity: 'error',
-      then: { function: 'truthy' },
-    },
-    'op-summary-required': {
-      description: 'Each operation should have a summary.',
-      given: '$.paths[*][*]',
-      severity: 'warn',
-      then: { field: 'summary', function: 'truthy' },
-    },
-    'op-tags-min-one': {
-      description: 'Each operation should have at least one tag.',
-      given: '$.paths[*][*]',
-      severity: 'warn',
-      then: {
-        field: 'tags',
-        function: 'schema',
-        functionOptions: { schema: { type: 'array', minItems: 1 } },
-      },
-    },
-    'op-has-2xx-response': {
-      description: 'Operations should define at least one 2xx response.',
-      given: '$.paths[*][*].responses',
-      severity: 'warn',
-      then: { function: 'has2xx' },
-    },
-    // allow text/plain on /metrics explicitly (no noise here)
-    'metrics-plaintext-ok': {
+    "metrics-plaintext-ok": {
       given: "$.paths['/metrics'].get.responses['200'].content['text/plain'].schema.type",
-      severity: 'off',
-      then: { function: 'truthy' },
-    },
-  },
+      severity: "off",
+      then: { function: "truthy" }
+    }
+  }
 };
