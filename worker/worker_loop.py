@@ -757,8 +757,11 @@ def handle_job(unified_job: dict) -> dict:
         # agent_plan should also use call_llm_generic for WebRelay support
         return call_llm_generic(unified_job)
     
-    # NEW: Self-Loop Handler (check job_type in params)
-    if job_params.get("job_type") == "sheratan_selfloop":
+    # Self-Loop Handler - check job_type in multiple locations:
+    # 1. payload.params.job_type (nested format)
+    # 2. payload.job_type (selfloop API format - job_type at root)
+    selfloop_type = job_params.get("job_type") or lcp.get("job_type")
+    if selfloop_type == "sheratan_selfloop":
         print(f"[worker] Self-Loop job detected: {job_id}")
         # Self-Loop jobs use WebRelay with special prompt format
         return call_llm_generic(unified_job)

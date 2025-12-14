@@ -40,8 +40,8 @@ services:
       - SHERATAN_METRICS_URL=http://backend:8000/metrics/module-calls
     volumes:
       - core-data:/app/data
-      - relay-out:/app/webrelay_out
-      - relay-in:/app/webrelay_in
+      - ./webrelay_out:/app/webrelay_out
+      - ./webrelay_in:/app/webrelay_in
     ports:
       - "8001:8000"
     depends_on:
@@ -75,8 +75,8 @@ services:
       - SHERATAN_LLM_MODEL=${SHERATAN_LLM_MODEL:-gpt-4-mini}
       - SHERATAN_LLM_API_KEY=${SHERATAN_LLM_API_KEY:-}
     volumes:
-      - relay-out:/webrelay_out
-      - relay-in:/webrelay_in
+      - ./webrelay_out:/webrelay_out
+      - ./webrelay_in:/webrelay_in
       - ./project:/workspace/project
     depends_on:
       - core
@@ -97,13 +97,12 @@ services:
     networks:
       - sheratan_net
     volumes:
-      - relay-out:/app/webrelay_out
-      - relay-in:/app/webrelay_in
+      - ./webrelay_out:/app/webrelay_out
+      - ./webrelay_in:/app/webrelay_in
 
 volumes:
   core-data:
-  relay-out:
-  relay-in:
+    # relay-out und relay-in jetzt als Host-Mounts (./webrelay_out, ./webrelay_in)
 
 
 networks:

@@ -212,8 +212,16 @@ def create_standard_code_analysis_mission(user_id: str = "local") -> dict[str, A
 
     task = core_post(f"/api/missions/{mission_id}/tasks", task_payload)
 
-    # Create job for the task
-    job_payload = {"payload": task_payload["params"]}
+    # Create job for the task - MUST include task structure for worker!
+    job_payload = {
+        "payload": {
+            "task": {
+                "kind": "agent_plan",
+                "params": task_payload["params"]
+            },
+            "params": task_payload["params"]
+        }
+    }
     job = core_post(f"/api/tasks/{task['id']}/jobs", job_payload)
 
     # Auto-dispatch
