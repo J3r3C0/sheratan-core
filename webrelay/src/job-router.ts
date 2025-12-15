@@ -21,33 +21,22 @@ export class JobRouter {
     if (job.kind === 'agent_plan' && payload.task?.params?.user_prompt) {
       const userPrompt = payload.task.params.user_prompt;
       const projectRoot = payload.task.params.project_root || '/workspace/project';
+      const prevResults = payload.loop_state?.previous_results || [];
+      const iteration = payload.loop_state?.iteration || 1;
 
-      return `You are a code-editing agent for the Sheratan workspace.
+      // Compact LLM-optimized prompt matching SYSTEM_PROMPT.md
+      return `SHERATAN AGENT - Respond per SYSTEM_PROMPT protocol.
 
-User Request: ${userPrompt}
-Project Root: ${projectRoot}
+MISSION: ${userPrompt}
+ROOT: ${projectRoot}
+ITERATION: ${iteration}
+PREVIOUS_RESULTS: ${JSON.stringify(prevResults)}
 
-Create a plan as JSON with this exact structure:
-{
-  "action": "create_followup_jobs",
-  "commentary": "Brief explanation of the plan",
-  "new_jobs": [
-    {
-      "name": "Task name",
-      "description": "What this task does",
-      "kind": "list_files" | "read_file" | "rewrite_file",
-      "params": { ... },
-      "auto_dispatch": true/false
-    }
-  ]
-}
+Actions: list_files{patterns}, read_file{path}, write_file{path,content}
+Format: {"ok":true,"action":"create_followup_jobs","new_jobs":[{"name":"X","kind":"...","params":{...}}]}
+Done: {"ok":true,"action":"mission_complete","summary":"..."}
 
-Available task kinds:
-- list_files: {root, patterns: ["**/*.py"]}
-- read_file: {root, rel_path: "main.py"}
-- rewrite_file: {root, rel_path: "file.py", new_content: "..."}
-
-Return ONLY the JSON, no explanation text. End with }}}`;
+Rules: JSON only. Max 5 jobs. Read before write.`;
     }
 
     // Self-Loop format (Boss directive 2.2)
@@ -90,35 +79,22 @@ WICHTIG:
 `;
     }    // LCP format tasks
     if (payload.task && payload.mission) {
-      const taskKind = payload.task.kind || 'unknown';
-      const taskParams = payload.task.params || {};
-      const missionGoal = payload.mission.description || 'Complete mission';
+      const missionGoal = payload.mission.description || payload.mission.goal || 'Complete mission';
+      const prevResults = payload.loop_state?.previous_results || [];
+      const iteration = payload.loop_state?.iteration || 1;
 
-      return `You are an autonomous agent. Respond in LCP format.
+      // Compact LLM-optimized prompt
+      return `SHERATAN AGENT - SYSTEM_PROMPT protocol.
 
 MISSION: ${missionGoal}
-TASK: ${taskKind}
-PARAMS: ${JSON.stringify(taskParams)}
+ITERATION: ${iteration}
+PREVIOUS_RESULTS: ${JSON.stringify(prevResults)}
 
-RESPOND WITH:
-{
-  "ok": true,
-  "action": "create_followup_jobs",
-  "commentary": "Brief plan",
-  "new_jobs": [
-    {"task": "analyze_file", "params": {"file": "path.py"}},
-    {"task": "write_file", "params": {"file": "report.md", "content": "..."}}
-  ]
-}
+Actions: list_files{patterns}, read_file{path}, write_file{path,content}
+Format: {"ok":true,"action":"create_followup_jobs","new_jobs":[{"name":"X","kind":"...","params":{...}}]}
+Done: {"ok":true,"action":"mission_complete","summary":"..."}
 
-AVAILABLE TASKS: list_files, analyze_file, write_file, patch_file
-
-RULES:
-- Create 1-3 followup jobs
-- Keep commentary brief 
-- End with }}}
-
-Now respond:`;
+JSON only. Max 5 jobs. Read before write.`;
     }
 
     // Fallback: stringify entire payload

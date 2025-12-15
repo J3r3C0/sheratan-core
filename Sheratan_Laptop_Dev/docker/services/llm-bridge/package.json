@@ -1,0 +1,13 @@
+{
+  "name": "llm-bridge",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "server.js",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "node-fetch": "^3.3.2",
+    "p-limit": "^5.0.0"
+  }
+}

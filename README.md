@@ -48,15 +48,67 @@ This decouples the system and allows for different worker implementations (Pytho
 
 ## Getting Started
 
-1. **Configure Environment**:
-   Check `.env` and `docker-compose.yml` for LLM settings (`SHERATAN_LLM_BASE_URL`, `SHERATAN_LLM_API_KEY`).
+### Quick Start: Tower vs Laptop Mode
 
-2. **Start Services**:
-   ```bash
-   docker-compose up --build
+This package supports two deployment modes:
+
+| Mode | Description | Script |
+|------|-------------|--------|
+| **Tower** | Full Docker stack (all services) | `.\start_tower.ps1` |
+| **Laptop** | Thin client connecting to Tower | `.\start_laptop.ps1` |
+
+---
+
+### Tower Setup (Desktop/Standrechner)
+
+1. **Configure Environment**:
+   ```powershell
+   cp .env.example .env
+   # Edit .env with your LLM settings
    ```
 
-3. **Usage**:
+2. **Start All Services**:
+   ```powershell
+   .\start_tower.ps1 -Build -Detach
+   ```
+
+3. **Enable SMB Share** (for Laptop development access):
+   ```powershell
+   # Run as Administrator!
+   .\setup_smb_share.ps1
+   ```
+
+---
+
+### Laptop Setup (Remote Development)
+
+1. **Connect to Tower Share**:
+   ```powershell
+   net use S: \\<TOWER_IP>\Sheratan /persistent:yes
+   ```
+
+2. **Set Tower Host**:
+   ```powershell
+   setx SHERATAN_TOWER_HOST "<TOWER_IP>"
+   ```
+
+3. **Start Laptop Mode**:
+   ```powershell
+   .\start_laptop.ps1
+   ```
+
+---
+
+### Services & Ports
+
+| Service | Port | Description |
+|---------|------|-------------|
+| Backend | 8000 | API Gateway |
+| Core | 8001 | Mission Engine |
+| LLM-Bridge | 3000 | LLM Proxy |
+| WebRelay | 3000 | Browser Automation |
+
+4. **Usage**:
    - Access the Core API at `http://localhost:8001`.
    - Create a Mission via the API or Dashboard.
    - The system will dispatch jobs and the Worker will process them.

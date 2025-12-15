@@ -444,26 +444,26 @@
         <div class="section">
             <div class="section-title">📁 Files & Volumes</div>
 
-            <div class="component file deprecated" data-info="webrelay-out">
-                <div class="status-badge status-error"></div>
+            <div class="component file active" data-info="webrelay-out">
+                <div class="status-badge status-ok"></div>
                 <div class="component-header">
-                    <div class="component-icon" style="background:#ef4444">📤</div>
+                    <div class="component-icon" style="background:#22c55e">📤</div>
                     <span class="component-name">webrelay_out/</span>
-                    <span class="component-type">Host Folder</span>
+                    <span class="component-type">Host Mount</span>
                 </div>
-                <div class="component-desc">⚠️ LEER! Docker schreibt in Volume!</div>
-                <div class="component-files">Worker → Volume, nicht Host</div>
+                <div class="component-desc">✅ Host-Mount für Worker → WebRelay</div>
+                <div class="component-files">./webrelay_out:/webrelay_out</div>
             </div>
 
-            <div class="component file deprecated" data-info="webrelay-in">
-                <div class="status-badge status-warn"></div>
+            <div class="component file active" data-info="webrelay-in">
+                <div class="status-badge status-ok"></div>
                 <div class="component-header">
-                    <div class="component-icon" style="background:#f59e0b">📥</div>
+                    <div class="component-icon" style="background:#22c55e">📥</div>
                     <span class="component-name">webrelay_in/</span>
-                    <span class="component-type">Host Folder</span>
+                    <span class="component-type">Host Mount</span>
                 </div>
-                <div class="component-desc">WebRelay Results zurück</div>
-                <div class="component-files">Gleiche Volume-Problematik</div>
+                <div class="component-desc">✅ WebRelay Results zurück</div>
+                <div class="component-files">./webrelay_in:/webrelay_in</div>
             </div>
 
             <div class="component file" data-info="docker-volumes">
@@ -473,8 +473,8 @@
                     <span class="component-name">Docker Named Volumes</span>
                     <span class="component-type">Internal</span>
                 </div>
-                <div class="component-desc">relay-out, relay-in, core-data</div>
-                <div class="component-files">docker-compose.yml volumes:</div>
+                <div class="component-desc">core-data (nur für SQLite)</div>
+                <div class="component-files">relay-out/in jetzt Host-Mounts</div>
             </div>
 
             <div class="component file" data-info="project">
@@ -566,12 +566,12 @@
             </div>
 
             <div class="issue-item">
-                <div class="issue-icon">ℹ️</div>
+                <div class="issue-icon" style="color:#22c55e">✅</div>
                 <div>
-                    <div class="issue-text"><strong>Zwei WebRelay-Versionen:</strong> Docker und Lokal – beide
-                        funktionieren!</div>
-                    <div class="issue-fix">INFO: Entscheidung nötig: Entweder Docker WebRelay ODER Lokales.
-                        Siehe WEBRELAY_ANALYSIS.md für Details.</div>
+                    <div class="issue-text"><strong>WebRelay Entscheidung:</strong> Lokal (Host) wird genutzt, Docker
+                        gestoppt</div>
+                    <div class="issue-fix">docker-compose stop webrelay | Lokal: npm start in webrelay/ | Port :3000
+                    </div>
                 </div>
             </div>
 
@@ -586,18 +586,18 @@
             </div>
 
             <div class="issue-item">
-                <div class="issue-icon">❓</div>
+                <div class="issue-icon" style="color:#22c55e">✅</div>
                 <div>
-                    <div class="issue-text"><strong>LLM Config:</strong> SHERATAN_LLM_BASE_URL nicht gesetzt - Docker
-                        Worker weiß nicht wohin</div>
-                    <div class="issue-fix">FIX: .env mit LLM Endpoint konfigurieren (für Regular Jobs)</div>
+                    <div class="issue-text"><strong>LLM Config:</strong> <s>SHERATAN_LLM_BASE_URL nicht gesetzt</s> →
+                        GEFIXT!</div>
+                    <div class="issue-fix">.env: SHERATAN_LLM_BASE_URL=http://host.docker.internal:3000/api/relay</div>
                 </div>
             </div>
         </div>
 
         <!-- FOOTER -->
         <div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: #64748b; font-size: 11px;">
-            📅 Letzte Aktualisierung: <span id="timestamp">2024-12-14 14:50</span> |
+            📅 Letzte Aktualisierung: <span id="timestamp">2024-12-14 21:40</span> |
             📄 <a href="WEBRELAY_ANALYSIS.md" style="color: #38bdf8;">WEBRELAY_ANALYSIS.md</a> |
             🔧 Dieses Diagramm: system-architecture.html
         </div>
@@ -625,27 +625,27 @@
             },
             'worker': {
                 title: 'Docker Worker (sheratan_worker)',
-                endpoints: ['Liest von: /webrelay_out (Volume)', 'Schreibt nach: /webrelay_in (Volume)'],
-                flow: ['Core dispatch', 'Worker', 'Named Volume', '(LLM API?)'],
-                note: '⚠️ Schreibt in Docker Named Volume, nicht Host-Ordner! LLM Config fehlt vermutlich.'
+                endpoints: ['Liest von: ./webrelay_out (Host-Mount)', 'Schreibt nach: ./webrelay_in (Host-Mount)'],
+                flow: ['Core dispatch', 'Worker', 'Host-Mount', 'WebRelay :3000'],
+                note: '✅ Nutzt jetzt Host-Mounts! LLM URL: http://host.docker.internal:3000/api/relay'
             },
             'webrelay-docker': {
-                title: 'WebRelay Docker (NICHT VERWENDET)',
+                title: 'WebRelay Docker (GESTOPPT)',
                 endpoints: [],
                 flow: [],
-                note: '⚠️ Dockerfile existiert, aber Service läuft lokal via npm start. Docker-Version nicht gestartet.'
+                note: '✅ Docker WebRelay gestoppt. Lokales WebRelay wird genutzt (Port 3000).'
             },
             'webrelay-local': {
-                title: 'WebRelay (Lokal)',
-                endpoints: ['GET /health', 'POST /api/llm/call', 'POST /api/job/submit', 'File Watcher: C:\\Sheratan\\2_sheratan_core\\webrelay_out'],
+                title: 'WebRelay (Lokal) - AKTIV',
+                endpoints: ['GET /health', 'POST /api/relay', 'File Watcher: ./webrelay_out'],
                 flow: ['Host-Ordner', 'WebRelay', 'Chrome CDP', 'ChatGPT'],
-                note: 'Puppeteer-basiert. Schaut auf HOST-Ordner webrelay_out/ der LEER ist weil Docker in Volume schreibt!'
+                note: '✅ AKTIV! Puppeteer-basiert. Nutzt Host-Mount webrelay_out/ für Jobs von Docker Worker.'
             },
             'webrelay-out': {
-                title: 'webrelay_out/ (Host-Ordner)',
-                endpoints: [],
-                flow: ['Docker Worker', '✗ Named Volume', '✗ Host-Ordner', 'WebRelay'],
-                note: '⚠️ PROBLEM: WebRelay erwartet Jobs hier, aber Docker Worker schreibt in Named Volume "relay-out" NICHT in diesen Host-Ordner!'
+                title: 'webrelay_out/ (Host-Mount)',
+                endpoints: ['./webrelay_out:/webrelay_out'],
+                flow: ['Docker Worker', '→ Host-Mount', '→ WebRelay'],
+                note: '✅ GEFIXT! Docker Worker und lokales WebRelay teilen jetzt diesen Host-Ordner.'
             },
             'react-dashboard': {
                 title: 'React Dashboard (1_Sheratan_Dev_Dashboard)',
@@ -666,16 +666,16 @@
                 note: 'Chrome muss mit --remote-debugging-port=9222 gestartet werden. WebRelay connected via Puppeteer zu diesem Port.'
             },
             'webrelay-in': {
-                title: 'webrelay_in/ (Host-Ordner)',
-                endpoints: [],
-                flow: ['WebRelay', 'Schreibt Result', 'webrelay_in/', 'Worker liest'],
-                note: '⚠️ Gleiche Problematik wie webrelay_out: WebRelay schreibt in Host-Ordner, aber Docker Worker liest von Named Volume.'
+                title: 'webrelay_in/ (Host-Mount)',
+                endpoints: ['./webrelay_in:/webrelay_in'],
+                flow: ['WebRelay', '→ Host-Mount', '→ Docker Worker'],
+                note: '✅ GEFIXT! WebRelay schreibt Results hierhin, Docker Worker liest sie.'
             },
             'docker-volumes': {
                 title: 'Docker Named Volumes',
-                endpoints: ['relay-out (für Jobs)', 'relay-in (für Results)', 'core-data (SQLite DB)'],
-                flow: ['Docker Volume', '↔ Container', 'Nicht Host-sichtbar'],
-                note: 'Named Volumes sind intern im Docker. Lokale Ordner webrelay_out/ und webrelay_in/ sind NICHT die gleichen Ordner!'
+                endpoints: ['core-data (SQLite DB)'],
+                flow: ['Docker Volume', '↔ Container'],
+                note: '✅ Nur noch core-data als Named Volume. relay-out/in sind jetzt Host-Mounts!'
             },
             'project': {
                 title: 'project/ (Mounted Volume)',
