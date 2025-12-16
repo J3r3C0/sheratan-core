@@ -1,0 +1,45 @@
+{
+  "job_id": "b0b8b77c-3515-4747-9430-cd4991cd245f",
+  "kind": "agent_plan",
+  "session_id": "core_v2_ea9686d0-748a-498f-9dce-2f93342624d0",
+  "created_at": "2025-12-16T11:45:31.838723Z",
+  "payload": {
+    "response_format": "lcp",
+    "mission": {
+      "id": "ea9686d0-748a-498f-9dce-2f93342624d0",
+      "title": "E2E Test Mission",
+      "description": "Complete test",
+      "metadata": {
+        "project_root": "./project",
+        "max_iterations": 10
+      },
+      "tags": [
+        "e2e",
+        "test"
+      ],
+      "created_at": "2025-12-16T11:45:17.985324Z"
+    },
+    "task": {
+      "id": "3f2243db-9eea-4e68-bb31-c48415b305f7",
+      "mission_id": "ea9686d0-748a-498f-9dce-2f93342624d0",
+      "name": "agent_plan",
+      "description": "Auto-analysis of tool results",
+      "kind": "agent_plan",
+      "params": {},
+      "created_at": "2025-12-16T11:45:31.833150Z"
+    },
+    "params": {
+      "prompt": "Previous step completed: list_files\n\nResult: {\n  \"ok\": true,\n  \"action\": \"list_files_result\",\n  \"files\": [\n    \"main.py\",\n    \"utils.py\",\n    \"test.py\"\n  ]\n}\n\nBased on this result, what should be the next steps to accomplish the mission goal: \"Complete test\"?\n\nCreate followup jobs to continue the analysis.",
+      "previous_result": {
+        "ok": true,
+        "action": "list_files_result",
+        "files": [
+          "main.py",
+          "utils.py",
+          "test.py"
+        ]
+      },
+      "mission_goal": "Complete test"
+    }
+  }
+}
