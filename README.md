@@ -121,3 +121,29 @@ This package supports two deployment modes:
   - `worker_loop.py`: Main loop for processing jobs.
 - `project/`: The workspace directory where the agent operates (mounted to `/workspace/project` in the worker).
 
+## Self-Loop Optimizations
+
+The Self-Loop system has been enhanced with adaptive learning capabilities:
+
+### New Modules (`core/sheratan_core_v2/`)
+
+| Module | Purpose |
+|--------|---------|
+| `evaluation_metrics.py` | Metrics calculation & loop evaluation scoring |
+| `adaptive_llm_config.py` | Dynamic temperature/token adjustment |
+| `learning_tracker.py` | Persistent learning steps for dashboard |
+| `loop_state_manager.py` | Versioned loop state persistence |
+| `robust_parser.py` | Fallback JSON extraction from malformed responses |
+
+### Worker Enhancements (`worker/`)
+
+- **Simulation Mode**: Set `SHERATAN_SIMULATION_MODE=true` for deterministic testing
+- **PDF Extraction**: New `pdf_to_json` action type (requires `pip install PyPDF2 pdfplumber`)
+
+### Running Tests
+
+```bash
+cd 2_sheratan_core
+pip install pytest
+python -m pytest core/tests/ -v
+```

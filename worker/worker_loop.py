@@ -225,6 +225,135 @@ def rewrite_file_from_params(job_id: str | None, tool_params: dict, job_params: 
         "new_content_preview": preview,
     }
 
+
+def pdf_to_json_from_params(params: dict) -> dict:
+    """
+    Extract text content from PDF and return as structured JSON.
+    
+    Params:
+        path: Absolute or relative path to PDF file
+        root: Optional root directory
+        extract_tables: Optional, attempt to extract tables (default: false)
+        max_pages: Optional, limit pages to extract (default: all)
+    
+    Returns:
+        JSON with extracted text, page count, and optional table data
+    """
+    root = params.get("root")
+    path = params.get("path")
+    rel_path = params.get("rel_path")
+    extract_tables = params.get("extract_tables", False)
+    max_pages = params.get("max_pages")
+    
+    file_path = resolve_file(root, rel_path, path)
+    if file_path is None:
+        return {
+            "ok": False,
+            "action": "pdf_to_json_result",
+            "error": "missing path / rel_path"
+        }
+    
+    if not file_path.exists():
+        return {
+            "ok": False,
+            "action": "pdf_to_json_result",
+            "error": f"PDF file does not exist: {file_path}"
+        }
+    
+    if not str(file_path).lower().endswith('.pdf'):
+        return {
+            "ok": False,
+            "action": "pdf_to_json_result",
+            "error": f"Not a PDF file: {file_path}"
+        }
+    
+    try:
+        # Try to import PDF library
+        try:
+            import PyPDF2
+            use_pypdf2 = True
+        except ImportError:
+            try:
+                import pdfplumber
+                use_pypdf2 = False
+            except ImportError:
+                # Fallback: return file info without extraction
+                return {
+                    "ok": True,
+                    "action": "pdf_to_json_result",
+                    "path": str(file_path),
+                    "warning": "No PDF library installed (PyPDF2 or pdfplumber). Install with: pip install PyPDF2",
+                    "file_size_bytes": file_path.stat().st_size,
+                    "text": None,
+                    "pages": None
+                }
+        
+        pages_data = []
+        full_text = []
+        
+        if use_pypdf2:
+            # Use PyPDF2
+            with open(file_path, 'rb') as f:
+                reader = PyPDF2.PdfReader(f)
+                total_pages = len(reader.pages)
+                pages_to_read = min(total_pages, max_pages) if max_pages else total_pages
+                
+                for i in range(pages_to_read):
+                    page = reader.pages[i]
+                    text = page.extract_text() or ""
+                    pages_data.append({
+                        "page": i + 1,
+                        "text": text,
+                        "char_count": len(text)
+                    })
+                    full_text.append(text)
+        else:
+            # Use pdfplumber
+            import pdfplumber
+            with pdfplumber.open(file_path) as pdf:
+                total_pages = len(pdf.pages)
+                pages_to_read = min(total_pages, max_pages) if max_pages else total_pages
+                
+                for i in range(pages_to_read):
+                    page = pdf.pages[i]
+                    text = page.extract_text() or ""
+                    page_data = {
+                        "page": i + 1,
+                        "text": text,
+                        "char_count": len(text)
+                    }
+                    
+                    # Extract tables if requested
+                    if extract_tables:
+                        tables = page.extract_tables()
+                        if tables:
+                            page_data["tables"] = tables
+                    
+                    pages_data.append(page_data)
+                    full_text.append(text)
+        
+        combined_text = "\n\n".join(full_text)
+        
+        return {
+            "ok": True,
+            "action": "pdf_to_json_result",
+            "path": str(file_path),
+            "total_pages": total_pages,
+            "pages_extracted": len(pages_data),
+            "total_chars": len(combined_text),
+            "text": combined_text,
+            "pages": pages_data,
+            "has_tables": any("tables" in p for p in pages_data)
+        }
+        
+    except Exception as e:
+        return {
+            "ok": False,
+            "action": "pdf_to_json_result",
+            "error": f"Failed to extract PDF: {type(e).__name__}: {e}",
+            "path": str(file_path)
+        }
+
 def call_llm_for_plan(user_prompt: str, project_root: str, files: list | None = None) -> dict:
     """
     Ruft dein LLM auf, um einen Plan zu bauen.
@@ -368,13 +497,55 @@ def call_llm_for_plan(user_prompt: str, project_root: str, files: list | None = 
         }
 
 
+# Simulation Mode: Path to simulation responses
+SIMULATION_RESPONSES_DIR = Path(__file__).parent / "simulation_responses"
+
+
+def _get_simulation_response(unified_job: dict) -> dict:
+    """Return deterministic simulation response for testing."""
+    lcp = unified_job.get("payload", {}) or {}
+    job_params = lcp.get("params", {}) or {}
+    task = lcp.get("task", {}) or {}
+    task_kind = task.get("kind", "")
+    job_type = job_params.get("job_type") or lcp.get("job_type")
+    
+    if job_type == "sheratan_selfloop":
+        sim_file = SIMULATION_RESPONSES_DIR / "selfloop.json"
+    elif task_kind == "agent_plan":
+        sim_file = SIMULATION_RESPONSES_DIR / "agent_plan.json"
+    elif task_kind == "list_files":
+        sim_file = SIMULATION_RESPONSES_DIR / "list_files.json"
+    else:
+        sim_file = SIMULATION_RESPONSES_DIR / "llm_call.json"
+    
+    if sim_file.exists():
+        try:
+            with open(sim_file, "r", encoding="utf-8") as f:
+                response = json.load(f)
+            response["_simulation"] = True
+            job_id = unified_job.get("job_id", "unknown")
+            print(f"[worker] 🎭 SIMULATION: Loaded {sim_file.name} for {job_id}")
+            return response
+        except Exception as e:
+            print(f"[worker] 🎭 SIMULATION: Failed to load {sim_file}: {e}")
+    
+    return {"ok": True, "action": "text_result", "text": "[SIMULATION] Fallback", "_simulation": True}
+
+
 def call_llm_generic(unified_job: dict) -> dict:
     """
     Generischer LLM Call für LCP-basierte Tasks.
     
     Macht einen HTTP Call zu WebRelay mit dem Job Payload,
     und gibt das LCP Result zurück.
+    
+    Supports SHERATAN_SIMULATION_MODE=true for deterministic testing.
     """
+    # SIMULATION MODE: Return deterministic responses for testing
+    simulation_mode = os.getenv("SHERATAN_SIMULATION_MODE", "").lower() == "true"
+    if simulation_mode:
+        return _get_simulation_response(unified_job)
+    
     base_url = os.getenv("SHERATAN_LLM_BASE_URL")
     model = os.getenv("SHERATAN_LLM_MODEL", "gpt-4-mini")
     api_key = os.getenv("SHERATAN_LLM_API_KEY")
@@ -749,6 +920,9 @@ def handle_job(unified_job: dict) -> dict:
 
     if task_kind == "rewrite_file":
         return rewrite_file_from_params(job_id, merged_params, job_params)
+
+    if task_kind == "pdf_to_json":
+        return pdf_to_json_from_params(merged_params)
 
     if task_kind == "llm_call":
         return call_llm_generic(unified_job)
