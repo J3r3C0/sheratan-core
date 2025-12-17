@@ -77,7 +77,8 @@ Rules:
 
 const BROWSER_URL = process.env.BROWSER_URL || 'http://127.0.0.1:9222';
 const WEB_INTERFACE_URL = process.env.WEB_INTERFACE_URL || 'https://chatgpt.com';
-const SEL_TEXTAREA = 'textarea[aria-label="Message ChatGPT"], textarea';
+// Language-agnostic selectors - try multiple patterns
+const SEL_TEXTAREA = 'div[id="prompt-textarea"], textarea[placeholder], textarea[data-id="root"], #prompt-textarea, textarea';
 const SENTINEL = '}}}';
 const JSON_END_PATTERN = /}\s*]\s*}\s*$/;
 
