@@ -3,11 +3,18 @@ import os
 import time
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env
+load_dotenv()
 
 # Add mesh paths for registry
-MESH_PATH = Path("C:/Sheratan/3_mesh/mesh_idee/mesh_fake_ledger")
+MESH_PATH = Path("C:/Sheratan/3_mesh/mesh_idee")
 if str(MESH_PATH) not in sys.path:
     sys.path.append(str(MESH_PATH))
+
+import requests
+import fnmatch
 
 try:
     from mesh_fake_ledger.mesh_registry import WorkerRegistry, WorkerInfo, WorkerCapability
@@ -950,7 +957,7 @@ def main_loop():
     # --- AUTO-REGISTRATION ---
     if WorkerRegistry:
         try:
-            registry_file = MESH_PATH / "workers.json"
+            registry_file = MESH_PATH / "mesh_fake_ledger" / "workers.json"
             registry = WorkerRegistry(registry_file)
             
             # Capability: list_files (cost 10), analyze (20), etc.
@@ -960,6 +967,7 @@ def main_loop():
                 WorkerCapability(kind="analyze_file", cost=15),
                 WorkerCapability(kind="write_file", cost=50),
                 WorkerCapability(kind="patch_file", cost=40),
+                WorkerCapability(kind="agent_plan", cost=30),
             ]
             
             registry.register(WorkerInfo(
@@ -1014,9 +1022,9 @@ def main_loop():
                 
                 # Notify Core to sync result and process follow-ups
                 try:
-                    core_url = os.getenv("SHERATAN_CORE_URL", "http://core:8000")
+                    core_url = os.getenv("SHERATAN_CORE_URL", "http://127.0.0.1:8001")
                     sync_url = f"{core_url}/api/jobs/{job_id}/sync"
-                    sync_resp = requests.post(sync_url, timeout=5)
+                    sync_resp = requests.post(sync_url, timeout=10)
                     if sync_resp.ok:
                         print(f"[worker] ✓ Notified Core to sync job {job_id[:12]}...")
                     else:
