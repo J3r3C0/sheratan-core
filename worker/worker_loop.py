@@ -1,14 +1,28 @@
 import json
 import os
 import time
+import sys
 from pathlib import Path
-import fnmatch
-import requests
 
-RELAY_OUT_DIR = Path("/webrelay_out")
-RELAY_IN_DIR = Path("/webrelay_in")
+# Add mesh paths for registry
+MESH_PATH = Path("C:/Sheratan/3_mesh/mesh_idee/mesh_fake_ledger")
+if str(MESH_PATH) not in sys.path:
+    sys.path.append(str(MESH_PATH))
 
-WORKSPACE_ROOT = Path("/workspace")  # Basis für relative Pfade
+try:
+    from mesh_fake_ledger.mesh_registry import WorkerRegistry, WorkerInfo, WorkerCapability
+except ImportError:
+    # Fallback to local or direct import if needed
+    try:
+        from mesh_registry import WorkerRegistry, WorkerInfo, WorkerCapability
+    except ImportError:
+        WorkerRegistry = None
+
+# Environment-aware paths
+RELAY_OUT_DIR = Path(os.getenv("RELAY_OUT_DIR", "C:/Sheratan/2_sheratan_core/webrelay_out"))
+RELAY_IN_DIR = Path(os.getenv("RELAY_IN_DIR", "C:/Sheratan/2_sheratan_core/webrelay_in"))
+WORKSPACE_ROOT = Path(os.getenv("WORKSPACE_ROOT", "C:/Sheratan"))
+WORKER_ID = os.getenv("WORKER_ID", "default_worker")
 
 
 def list_files_from_params(params: dict) -> dict:
@@ -930,7 +944,34 @@ def handle_job(unified_job: dict) -> dict:
     return result
 
 def main_loop():
-    print(f"Worker {WORKER_ID} started, watching {RELAY_OUT_DIR}")
+    print(f"--- Sheratan Worker 2.0 Starting (ID: {WORKER_ID}) ---")
+    print(f"[worker] Monitoring {RELAY_OUT_DIR}")
+    
+    # --- AUTO-REGISTRATION ---
+    if WorkerRegistry:
+        try:
+            registry_file = MESH_PATH / "workers.json"
+            registry = WorkerRegistry(registry_file)
+            
+            # Capability: list_files (cost 10), analyze (20), etc.
+            capabilities = [
+                WorkerCapability(kind="list_files", cost=10),
+                WorkerCapability(kind="llm_call", cost=25),
+                WorkerCapability(kind="analyze_file", cost=15),
+                WorkerCapability(kind="write_file", cost=50),
+                WorkerCapability(kind="patch_file", cost=40),
+            ]
+            
+            registry.register(WorkerInfo(
+                worker_id=WORKER_ID,
+                capabilities=capabilities,
+                status="online"
+            ))
+            print(f"[worker] ✓ Registered with ID {WORKER_ID} and {len(capabilities)} capabilities")
+        except Exception as e:
+            print(f"[worker] ⚠ Registration failed: {e}")
+    # -------------------------
+
     RELAY_OUT_DIR.mkdir(parents=True, exist_ok=True)
     RELAY_IN_DIR.mkdir(parents=True, exist_ok=True)
 
