@@ -193,10 +193,10 @@ async function main() {
     // Start HTTP API Server
     await startServer();
 
-    // Start File Watcher (for backward compatibility)
-    await startFileWatcher();
+    // File Watcher disabled - using HTTP API only to prevent race conditions
+    // await startFileWatcher();
 
-    console.log('✨ WebRelay Ready! Supports HTTP API + File Mode');
+    console.log('✨ WebRelay Ready! HTTP API Mode Only');
     console.log();
 }
 

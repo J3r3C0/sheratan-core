@@ -277,16 +277,9 @@ async function sendQuestionAndGetAnswer(
 
     console.log('🌐 Verbunden mit:', await page.title());
 
-    // Wrap prompt with Core2 LCP system instructions
-    const fullPrompt = `${CORE2_LCP_SYSTEM_PROMPT}
-
-USER REQUEST:
-${prompt}
-
-RESPOND NOW WITH JSON ONLY (no other text):`;
-
+    // Use prompt directly - JobRouter already built it with instructions
     await focusComposer(page);
-    await setTextareaValueAndSend(page, fullPrompt);
+    await setTextareaValueAndSend(page, prompt);
 
     const answer = await waitForStableAnswer(page);
     const url = page.url();

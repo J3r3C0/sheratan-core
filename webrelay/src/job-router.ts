@@ -17,90 +17,50 @@ export class JobRouter {
       return payload.prompt;
     }
 
-    // agent_plan format: task.params.user_prompt
-    if (job.kind === 'agent_plan' && payload.task?.params?.user_prompt) {
-      const userPrompt = payload.task.params.user_prompt;
-      const projectRoot = payload.task.params.project_root || '/workspace/project';
+    // agent_plan or general LCP format
+    if (job.kind === 'agent_plan' || (payload.task && payload.mission)) {
+      const userPrompt = payload.task?.params?.user_prompt || payload.mission?.description || 'Continue mission';
+      const projectRoot = payload.task?.params?.project_root || payload.params?.root || 'C:/workspace';
       const prevResults = payload.loop_state?.previous_results || [];
       const iteration = payload.loop_state?.iteration || 1;
 
-      // Compact LLM-optimized prompt matching SYSTEM_PROMPT.md
-      return `SHERATAN AGENT - Respond per SYSTEM_PROMPT protocol.
-
+      // Extremely concise protocol-driven prompt
+      return `SHERATAN PROTOCOL - ACT NOW
 MISSION: ${userPrompt}
 ROOT: ${projectRoot}
 ITERATION: ${iteration}
-PREVIOUS_RESULTS: ${JSON.stringify(prevResults)}
+CONTEXT: ${JSON.stringify(prevResults)}
 
-Actions: list_files{patterns}, read_file{path}, write_file{path,content}
-Format: {"ok":true,"action":"create_followup_jobs","new_jobs":[{"name":"X","kind":"...","params":{...}}]}
-Done: {"ok":true,"action":"mission_complete","summary":"..."}
+RULES:
+1. Respond with VALID JSON only (no intro/outro)
+2. Use "create_followup_jobs" to continue (list_files, read_file, rewrite_file)
+3. Use "mission_complete" to finish
+4. Limit to 3 jobs max per turn.
 
-Rules: JSON only. Max 5 jobs. Read before write.`;
+JSON RESPONSE:`;
     }
 
     // Self-Loop format (Boss directive 2.2)
     if (job.kind === 'self_loop') {
       const mission = payload.mission || {};
-      const task = payload.task as any || {};  // Type assertion for name/description
-      const state = payload.state || {}; // history_summary, constraints, open_questions
+      const task = payload.task as any || {};
+      const state = payload.state || {};
 
-      return `Sheratan Self-Loop (A/B/C/D Format)
+      return `Sheratan Self-Loop Report
+Mission: ${mission.title || ''} (${mission.description || ''})
+Task: ${task.name || ''} (${task.description || ''})
+State: ${JSON.stringify(state)}
 
-Mission:
-- Title: ${mission.title || ''}
-- Description: ${mission.description || ''}
+Markdown Format:
+A) Lagebild
+B) Nächster Schritt
+C) Umsetzung (3-5 Bullets)
+D) Offene Fragen
 
-Current Task:
-- Name: ${task.name || ''}
-- Description: ${task.description || ''}
-
-Current Loop State (JSON):
-${JSON.stringify(state, null, 2)}
-
-Write your answer in EXACTLY this Markdown format:
-
-A) Lagebild / Stand der Dinge
-- Kurze, knappe Zusammenfassung der Situation und des Fortschritts.
-
-B) Nächster sinnvoller Schritt
-- 1–3 Sätze, was der Agent als nächstes tun sollte.
-
-C) Konkrete Umsetzung (für diese Iteration)
-- 3–7 Bulletpoints, sehr konkret, was in dieser Iteration gemacht wird.
-- Gern mit Referenzen auf Dateien / Pfade (z.B. project/main.py).
-
-D) Vorschlag für nächsten Loop / offene Fragen
-- Bulletpoints mit offenen Fragen oder To-Dos für den nächsten Loop.
-
-WICHTIG:
-- Schreibe NUR dieses A/B/C/D-Markdown.
-- Kein JSON, keine Erklärungen außerhalb der Sections.
-`;
-    }    // LCP format tasks
-    if (payload.task && payload.mission) {
-      const missionGoal = payload.mission.description || payload.mission.goal || 'Complete mission';
-      const prevResults = payload.loop_state?.previous_results || [];
-      const iteration = payload.loop_state?.iteration || 1;
-
-      // Compact LLM-optimized prompt
-      return `SHERATAN AGENT - SYSTEM_PROMPT protocol.
-
-MISSION: ${missionGoal}
-ITERATION: ${iteration}
-PREVIOUS_RESULTS: ${JSON.stringify(prevResults)}
-
-Actions: list_files{patterns}, read_file{path}, write_file{path,content}
-Format: {"ok":true,"action":"create_followup_jobs","new_jobs":[{"name":"X","kind":"...","params":{...}}]}
-Done: {"ok":true,"action":"mission_complete","summary":"..."}
-
-JSON only. Max 5 jobs. Read before write.`;
+RESPOND NOW (Markdown only):`;
     }
 
-    // Fallback: stringify entire payload
-    return `Process this job:
-${JSON.stringify(job, null, 2)}
-
-Provide a helpful response ending with }}}`;
+    // Fallback
+    return `Process job kind "${job.kind}": ${JSON.stringify(job.payload)}`;
   }
 }

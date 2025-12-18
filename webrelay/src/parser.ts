@@ -24,10 +24,21 @@ function extractJsonFromMarkdown(text: string): string | null {
         return codeBlockMatch[1].trim();
     }
 
-    // Try to find JSON object in text (handles "ChatGPT said: {json}" cases)
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-        return jsonMatch[0];
+    // Find the first '{' that starts a complete JSON object
+    let depth = 0;
+    let startIdx = -1;
+
+    for (let i = 0; i < text.length; i++) {
+        if (text[i] === '{') {
+            if (depth === 0) startIdx = i;
+            depth++;
+        } else if (text[i] === '}') {
+            depth--;
+            if (depth === 0 && startIdx !== -1) {
+                // Found a complete JSON object
+                return text.slice(startIdx, i + 1);
+            }
+        }
     }
 
     return null;
@@ -60,13 +71,14 @@ export function parseResponse(rawAnswer: string, config: { sentinel: string }): 
             };
         }
 
-        // Check if it's create_followup_jobs format (from agent_plan)
-        if (parsed.action === 'create_followup_jobs' && parsed.new_jobs) {
+        // Check if it's an LCP action (create_followup_jobs, mission_complete, etc.)
+        const lcpActions = ['create_followup_jobs', 'mission_complete', 'analysis_result'];
+        if (parsed.action && (lcpActions.includes(parsed.action) || parsed.new_jobs)) {
             return {
                 type: 'lcp',
                 action: parsed.action,
-                commentary: parsed.commentary || '',
-                new_jobs: parsed.new_jobs,
+                commentary: parsed.commentary || parsed.summary || '',
+                new_jobs: parsed.new_jobs || [],
             };
         }
 
