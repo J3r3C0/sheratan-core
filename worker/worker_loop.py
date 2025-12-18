@@ -875,24 +875,12 @@ def run_agent_plan(unified_job: dict) -> dict:
     }
 
 
+WORKER_ID = os.getenv("WORKER_ID", "default_worker")
+
+
 def handle_job(unified_job: dict) -> dict:
     """
     unified_job ist das JSON aus <job_id>.job.json>.
-
-    Struktur (vereinfacht):
-    {
-      "job_id": "...",
-      "kind": "llm_call" | "write_file" | ...,
-      "payload": {
-        "response_format": "lcp",
-        "mission": {...},
-        "task": {
-          "kind": "read_file" | "list_files" | "rewrite_file",
-          "params": {...}
-        },
-        "params": {...}  // Job-spezifische Parameter (z.B. new_content)
-      }
-    }
     """
     job_id = unified_job.get("job_id")
     job_kind = unified_job.get("kind")
@@ -907,52 +895,42 @@ def handle_job(unified_job: dict) -> dict:
     # job_params takes precedence (allows per-job customization)
     merged_params = {**tool_params, **job_params}
 
-    print(f"[worker] handle_job job_id={job_id} job_kind={job_kind} task_kind={task_kind}")
+    print(f"[worker] handle_job job_id={job_id} job_kind={job_kind} task_kind={task_kind} worker={WORKER_ID}")
 
+    # Standard handlers
+    result = {"ok": True}
     if task_kind == "list_files":
-        return list_files_from_params(merged_params)
-
-    if task_kind == "read_file":
-        return read_file_from_params(merged_params)
-
-    if task_kind == "write_file":
-        return write_file_from_params(merged_params)
-
-    if task_kind == "rewrite_file":
-        return rewrite_file_from_params(job_id, merged_params, job_params)
-
-    if task_kind == "pdf_to_json":
-        return pdf_to_json_from_params(merged_params)
-
-    if task_kind == "llm_call":
-        return call_llm_generic(unified_job)
-
-    if task_kind == "agent_plan":
-        # agent_plan should also use call_llm_generic for WebRelay support
-        return call_llm_generic(unified_job)
-    
-    # Self-Loop Handler - check job_type in multiple locations:
-    # 1. payload.params.job_type (nested format)
-    # 2. payload.job_type (selfloop API format - job_type at root)
-    selfloop_type = job_params.get("job_type") or lcp.get("job_type")
-    if selfloop_type == "sheratan_selfloop":
+        result = list_files_from_params(merged_params)
+    elif task_kind == "read_file":
+        result = read_file_from_params(merged_params)
+    elif task_kind == "write_file":
+        result = write_file_from_params(merged_params)
+    elif task_kind == "rewrite_file":
+        result = rewrite_file_from_params(job_id, merged_params, job_params)
+    elif task_kind == "pdf_to_json":
+        result = pdf_to_json_from_params(merged_params)
+    elif task_kind == "llm_call" or task_kind == "agent_plan":
+        result = call_llm_generic(unified_job)
+    elif job_params.get("job_type") or lcp.get("job_type") == "sheratan_selfloop":
         print(f"[worker] Self-Loop job detected: {job_id}")
-        # Self-Loop jobs use WebRelay with special prompt format
-        return call_llm_generic(unified_job)
+        result = call_llm_generic(unified_job)
+    else:
+        # Fallback
+        result = {
+            "ok": True,
+            "action": "noop",
+            "message": f"Completed job {job_id} with kind={job_kind} (no specific handler)",
+            "payload_echo": lcp,
+        }
 
-    # Fallback
-    return {
-        "ok": True,
-        "action": "noop",
-        "message": (
-            f"Completed job {job_id} with kind={job_kind} "
-            f"(no specific handler for task_kind={task_kind})"
-        ),
-        "payload_echo": lcp,
-    }
+    # IMPORTANT: Include worker_id in the result for payment confirmation
+    if isinstance(result, dict):
+        result["worker_id"] = WORKER_ID
+    
+    return result
 
 def main_loop():
-    print("Worker loop started, watching", RELAY_OUT_DIR)
+    print(f"Worker {WORKER_ID} started, watching {RELAY_OUT_DIR}")
     RELAY_OUT_DIR.mkdir(parents=True, exist_ok=True)
     RELAY_IN_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -963,10 +941,18 @@ def main_loop():
                 unified_job = json.loads(raw)
             except Exception as e:
                 print("[worker] Failed to read job file", path, e)
-                path.unlink(missing_ok=True)
+                # If we cannot read it, we cannot check worker_id, so we skip and don't delete
                 continue
 
             job_id = unified_job.get("job_id") or path.stem.split(".")[0]
+            target_worker = unified_job.get("worker_id")
+            
+            # --- WORKER ARBITRAGE FILTERING ---
+            if target_worker and target_worker != WORKER_ID:
+                # This job is for another worker, skip it!
+                continue
+            # -----------------------------------
+
             print(f"[worker] Processing job file {path} (job_id={job_id})")
 
             try:
@@ -977,6 +963,7 @@ def main_loop():
                     "ok": False,
                     "action": "error",
                     "error": f"Exception in worker: {type(e).__name__}: {e}",
+                    "worker_id": WORKER_ID
                 }
 
             result_file = RELAY_IN_DIR / f"{job_id}.result.json"
@@ -995,7 +982,6 @@ def main_loop():
                         print(f"[worker] ⚠ Core sync returned {sync_resp.status_code}")
                 except Exception as e:
                     print(f"[worker] ⚠ Failed to notify Core: {e}")
-                    # Don't crash - Core will eventually poll for result
                 
             except Exception as e:
                 print("[worker] FAILED to write result file", result_file, e)
